@@ -1,0 +1,205 @@
+@model IEnumerable<DnDGameMaster.WebApp.Models.AIAlertThresholds>
+@{
+    ViewData["Title"] = "Configuration des Alertes IA";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-cog text-primary"></i> Configuration des Alertes IA
+        </h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addThresholdModal">
+            <i class="fas fa-plus"></i> Nouveau Seuil
+        </button>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tableau des seuils -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Seuils d'Alerte Configurés</h6>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="thresholdsTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Métrique</th>
+                                <th>Type</th>
+                                <th>Valeur</th>
+                                <th>Niveau d'Alerte</th>
+                                <th>Description</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var threshold in Model.OrderBy(t => t.MetricName))
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary">@threshold.MetricName</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@threshold.ThresholdType</span>
+                                    </td>
+                                    <td class="font-weight-bold">@threshold.ThresholdValue.ToString("F2")</td>
+                                    <td>
+                                        <span class="badge @(threshold.AlertLevel == "ERROR" ? "bg-danger" : "bg-warning")">
+                                            @threshold.AlertLevel
+                                        </span>
+                                    </td>
+                                    <td>@(string.IsNullOrEmpty(threshold.Description) ? "-" : threshold.Description)</td>
+                                    <td>
+                                        <span class="badge @(threshold.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(threshold.IsActive ? "Actif" : "Inactif")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="editThreshold(@threshold.Id, '@threshold.MetricName', '@threshold.ThresholdType', @threshold.ThresholdValue, '@threshold.AlertLevel', '@threshold.Description', @threshold.IsActive.ToString().ToLower())">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="deleteThreshold(@threshold.Id)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-cog fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">Aucun seuil configuré</h5>
+                    <p class="text-gray-400">Configurez des seuils d'alerte pour surveiller les performances de l'IA.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter/éditer un seuil -->
+<div class="modal fade" id="addThresholdModal" tabindex="-1" aria-labelledby="addThresholdModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="UpdateThreshold" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addThresholdModalLabel">Configurer un Seuil d'Alerte</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="thresholdId" name="Id" value="0">
+                    
+                    <div class="mb-3">
+                        <label for="metricName" class="form-label">Métrique</label>
+                        <select class="form-select" id="metricName" name="MetricName" required>
+                            <option value="">Sélectionner une métrique</option>
+                            <option value="response_time">Temps de Réponse</option>
+                            <option value="error_rate">Taux d'Erreur</option>
+                            <option value="success_rate">Taux de Succès</option>
+                            <option value="cost_per_day">Coût Quotidien</option>
+                            <option value="tokens_per_request">Tokens par Requête</option>
+                            <option value="requests_per_minute">Requêtes par Minute</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="thresholdType" class="form-label">Type de Seuil</label>
+                        <select class="form-select" id="thresholdType" name="ThresholdType" required>
+                            <option value="">Sélectionner un type</option>
+                            <option value="MIN">Minimum</option>
+                            <option value="MAX">Maximum</option>
+                            <option value="AVERAGE">Moyenne</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="thresholdValue" class="form-label">Valeur du Seuil</label>
+                        <input type="number" class="form-control" id="thresholdValue" name="ThresholdValue" step="0.01" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="alertLevel" class="form-label">Niveau d'Alerte</label>
+                        <select class="form-select" id="alertLevel" name="AlertLevel" required>
+                            <option value="WARNING">Avertissement</option>
+                            <option value="ERROR">Erreur</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="Description" rows="3" placeholder="Description optionnelle du seuil..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isActive" name="IsActive" checked>
+                            <label class="form-check-label" for="isActive">
+                                Seuil actif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editThreshold(id, metricName, thresholdType, thresholdValue, alertLevel, description, isActive) {
+            document.getElementById('thresholdId').value = id;
+            document.getElementById('metricName').value = metricName;
+            document.getElementById('thresholdType').value = thresholdType;
+            document.getElementById('thresholdValue').value = thresholdValue;
+            document.getElementById('alertLevel').value = alertLevel;
+            document.getElementById('description').value = description;
+            document.getElementById('isActive').checked = isActive === 'true';
+            
+            $('#addThresholdModal').modal('show');
+        }
+        
+        function deleteThreshold(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce seuil d\'alerte ?')) {
+                // Implémenter la suppression via AJAX ou formulaire
+                console.log('Supprimer le seuil:', id);
+            }
+        }
+        
+        $(document).ready(function() {
+            $('#thresholdsTable').DataTable({
+                "order": [[0, "asc"]],
+                "pageLength": 25,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
+                }
+            });
+        });
+    </script>
+} 

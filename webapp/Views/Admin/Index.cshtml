@@ -1,0 +1,168 @@
+@{
+    ViewData["Title"] = "Administration - D&D GameMaster";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-cogs text-primary"></i>
+                Administration
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Monitoring IA
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <a href="@Url.Action("Dashboard", "Admin")" class="text-decoration-none">
+                                    Dashboard
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Métriques IA
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <a href="@Url.Action("Metrics", "Admin")" class="text-decoration-none">
+                                    Voir les métriques
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-bar fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Logs IA
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <a href="@Url.Action("Logs", "Admin")" class="text-decoration-none">
+                                    Voir les logs
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Alertes IA
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <a href="@Url.Action("Alerts", "Admin")" class="text-decoration-none">
+                                    Voir les alertes
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="@Url.Action("Dashboard", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt mr-2"></i>
+                            Dashboard de monitoring
+                        </a>
+                        <a href="@Url.Action("Metrics", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Métriques de performance
+                        </a>
+                        <a href="@Url.Action("Logs", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-list mr-2"></i>
+                            Logs d'activité
+                        </a>
+                        <a href="@Url.Action("Alerts", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell mr-2"></i>
+                            Alertes actives
+                        </a>
+                        <a href="@Url.Action("Costs", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-dollar-sign mr-2"></i>
+                            Suivi des coûts
+                        </a>
+                        <a href="@Url.Action("ModelPerformance", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-brain mr-2"></i>
+                            Performance des modèles
+                        </a>
+                        <a href="@Url.Action("AlertThresholds", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-cog mr-2"></i>
+                            Configuration des seuils
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Informations système</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>Application :</strong> D&D GameMaster</p>
+                            <p><strong>Version :</strong> 1.0.0</p>
+                            <p><strong>Environnement :</strong> @Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")</p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>Utilisateur :</strong> @User.Identity?.Name</p>
+                            <p><strong>Rôle :</strong> Admin</p>
+                            <p><strong>Date :</strong> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

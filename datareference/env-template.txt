@@ -1,0 +1,51 @@
+# ===========================================================================
+# Configuration DataReference - Variables d'environnement
+# ===========================================================================
+# Copier ce fichier en .env et remplir avec vos vraies valeurs
+
+# ---------------------------------------------------------------------------
+# Configuration des bases de données
+# ---------------------------------------------------------------------------
+# Base de données Bronze (données brutes)
+BRONZE_DB_NAME=bronze_db
+BRONZE_DB_EXTERNAL_PORT=5435
+BRONZE_DB_HOST=datareference_bronze_postgres
+
+# Base de données Silver (données transformées)
+SILVER_DB_NAME=silver_db
+SILVER_DB_EXTERNAL_PORT=5436
+SILVER_DB_HOST=datareference_silver_postgres
+
+# Utilisateurs base de données (REMPLACER PAR VOS VALEURS)
+DB_ADMIN_USER=your_admin_user
+DB_ADMIN_PASSWORD=your_admin_password
+DB_READ_USER=your_read_user
+DB_READ_PASSWORD=your_read_password
+
+# ---------------------------------------------------------------------------
+# Configuration Azure Blob Storage (ETL Bronze)
+# ---------------------------------------------------------------------------
+# Chaîne de connexion Azure Storage (REMPLACER PAR VOTRE VALEUR)
+AZURE_BLOB_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=your_account;AccountKey=your_key;EndpointSuffix=core.windows.net
+
+# Conteneurs Azure Blob Storage
+AZURE_BLOB_CONTAINER=jsons
+JSON_BLOB_PATH=data/
+
+# ---------------------------------------------------------------------------
+# Configuration API JWT
+# ---------------------------------------------------------------------------
+# Clé secrète JWT (REMPLACER PAR VOTRE VALEUR SÉCURISÉE)
+JWT_SECRET=your_jwt_secret_key_here
+
+# Configuration d'authentification
+ENABLE_AUTH=true
+
+# Origins CORS autorisées
+CORS_ORIGINS=http://localhost,https://localhost,http://localhost:80,https://localhost:443
+
+# ---------------------------------------------------------------------------
+# Configuration des ports
+# ---------------------------------------------------------------------------
+# Port externe API DataReference
+DATAREFERENCE_API_EXTERNAL_PORT=5000

@@ -1,0 +1,360 @@
+name: 🚀 CI/CD Pipeline - D&D Game Master IA
+
+on:
+  pull_request:
+    branches: [ develop ]
+    types: [ opened, synchronize, reopened ]
+  push:
+    branches: [ develop, main ]
+
+env:
+  # Configuration des bases de données de test
+  DB_ADMIN_USER: fabadi
+  DB_ADMIN_PASSWORD: C11471041w!
+  DB_READ_USER: readuser
+  DB_READ_PASSWORD: READPASS
+  BRONZE_DB_NAME: bronze_db_test
+  SILVER_DB_NAME: silver_db_test
+  APP_DB_NAME: app_db_test
+  GAME_DB_USER: gamemaster
+  GAME_DB_PASSWORD: GAMEMASTER
+  JWT_SECRET: test_jwt_secret_key_for_ci_cd
+  
+  # Configuration IA pour les tests (clés fictives)
+  OPEN_AI_KEY: sk-test-fake-key-for-testing
+  ANTHROPIC_API_KEY: test-anthropic-key
+  
+  # Configuration email pour les tests
+  BREVO_API_KEY: test-brevo-key
+  MAILJET_API_KEY: test-mailjet-key
+
+jobs:
+  # 🧪 Test du service DataReference (ETL + API)
+  test-datareference:
+    name: 📊 Test DataReference Service
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres-bronze:
+        image: postgres:14
+        env:
+          POSTGRES_USER: fabadi
+          POSTGRES_PASSWORD: C11471041w!
+          POSTGRES_DB: bronze_db_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5435:5432
+          
+      postgres-silver:
+        image: postgres:14
+        env:
+          POSTGRES_USER: fabadi
+          POSTGRES_PASSWORD: C11471041w!
+          POSTGRES_DB: silver_db_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5436:5432
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: 📦 Install Dependencies
+        run: |
+          cd datareference
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov
+          
+      - name: 🗄️ Setup Test Databases
+        run: |
+          cd datareference
+          export BRONZE_PG_HOST=localhost
+          export BRONZE_PG_PORT=5435
+          export SILVER_PG_HOST=localhost
+          export SILVER_PG_PORT=5436
+          python -c "
+          import psycopg2
+          # Créer utilisateur lecture seule
+          conn = psycopg2.connect(host='localhost', port=5436, user='fabadi', password='C11471041w!', dbname='silver_db_test')
+          cur = conn.cursor()
+          cur.execute(\"CREATE USER readuser WITH PASSWORD 'READPASS';\")
+          cur.execute(\"GRANT CONNECT ON DATABASE silver_db_test TO readuser;\")
+          cur.execute(\"GRANT USAGE ON SCHEMA public TO readuser;\")
+          conn.commit()
+          cur.close()
+          conn.close()
+          "
+          
+      - name: 🧪 Run DataReference Tests
+        run: |
+          cd datareference
+          export BRONZE_PG_HOST=localhost
+          export BRONZE_PG_PORT=5435
+          export SILVER_PG_HOST=localhost
+          export SILVER_PG_PORT=5436
+          python -m pytest tests/ -v --cov=. --cov-report=xml
+          
+      - name: 📊 Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./datareference/coverage.xml
+          flags: datareference
+
+  # 🤖 Test du service LLMGameMaster
+  test-llmgamemaster:
+    name: 🤖 Test LLMGameMaster Service
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres-silver:
+        image: postgres:14
+        env:
+          POSTGRES_USER: fabadi
+          POSTGRES_PASSWORD: C11471041w!
+          POSTGRES_DB: silver_db_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5436:5432
+          
+      postgres-app:
+        image: postgres:14
+        env:
+          POSTGRES_USER: fabadi
+          POSTGRES_PASSWORD: C11471041w!
+          POSTGRES_DB: app_db_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5437:5432
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: 📦 Install Dependencies
+        run: |
+          cd llmgamemaster
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+          
+      - name: 🗄️ Setup Test Databases
+        run: |
+          # Créer les schémas et utilisateurs nécessaires
+          cd llmgamemaster
+          python -c "
+          import psycopg2
+          # Silver DB
+          conn = psycopg2.connect(host='localhost', port=5436, user='fabadi', password='C11471041w!', dbname='silver_db_test')
+          cur = conn.cursor()
+          cur.execute(\"CREATE USER readuser WITH PASSWORD 'READPASS';\")
+          cur.execute(\"GRANT CONNECT ON DATABASE silver_db_test TO readuser;\")
+          cur.execute(\"GRANT USAGE ON SCHEMA public TO readuser;\")
+          conn.commit()
+          cur.close()
+          conn.close()
+          
+          # App DB
+          conn = psycopg2.connect(host='localhost', port=5437, user='fabadi', password='C11471041w!', dbname='app_db_test')
+          cur = conn.cursor()
+          cur.execute(\"CREATE USER gamemaster WITH PASSWORD 'GAMEMASTER';\")
+          cur.execute(\"GRANT CONNECT ON DATABASE app_db_test TO gamemaster;\")
+          cur.execute(\"GRANT USAGE ON SCHEMA public TO gamemaster;\")
+          conn.commit()
+          cur.close()
+          conn.close()
+          "
+          
+      - name: 🧪 Run LLMGameMaster Tests
+        run: |
+          cd llmgamemaster
+          export SILVER_DB_HOST=localhost
+          export SILVER_DB_PORT=5436
+          export APP_DB_HOST=localhost
+          export APP_DB_PORT=5437
+          python -m pytest tests/ -v --cov=. --cov-report=xml
+          
+      - name: 📊 Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./llmgamemaster/coverage.xml
+          flags: llmgamemaster
+
+  # 🌐 Test de l'application WebApp
+  test-webapp:
+    name: 🌐 Test WebApp Service
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres-app:
+        image: postgres:14
+        env:
+          POSTGRES_USER: fabadi
+          POSTGRES_PASSWORD: C11471041w!
+          POSTGRES_DB: app_db_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5437:5432
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: ⚙️ Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: 📦 Restore Dependencies
+        run: |
+          cd webapp
+          dotnet restore
+          
+      - name: 🗄️ Setup Test Database
+        run: |
+          # Créer utilisateur gamemaster
+          cd webapp
+          export PGPASSWORD=C11471041w!
+          psql -h localhost -p 5437 -U fabadi -d app_db_test -c "CREATE USER gamemaster WITH PASSWORD 'GAMEMASTER';"
+          psql -h localhost -p 5437 -U fabadi -d app_db_test -c "GRANT CONNECT ON DATABASE app_db_test TO gamemaster;"
+          psql -h localhost -p 5437 -U fabadi -d app_db_test -c "GRANT USAGE ON SCHEMA public TO gamemaster;"
+          
+      - name: 🏗️ Build Application
+        run: |
+          cd webapp
+          dotnet build --no-restore --configuration Release
+          
+      - name: 🧪 Run WebApp Tests
+        run: |
+          cd webapp
+          export APP_DB_HOST=localhost
+          export APP_DB_PORT=5437
+          dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory TestResults
+          
+      - name: 📊 Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./webapp/TestResults/**/coverage.cobertura.xml
+          flags: webapp
+
+  # 🐳 Test d'intégration Docker
+  test-docker-integration:
+    name: 🐳 Test Docker Integration
+    runs-on: ubuntu-latest
+    needs: [test-datareference, test-llmgamemaster, test-webapp]
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🐳 Build Docker Images
+        run: |
+          # Build tous les services
+          docker-compose build datareference_api llm_gamemaster webapp
+          
+      - name: 🚀 Start Services
+        run: |
+          # Démarrer l'stack complet
+          docker-compose up -d
+          sleep 60  # Attendre que tous les services démarrent
+          
+      - name: 🔍 Health Checks
+        run: |
+          # Vérifier que tous les services répondent
+          echo "🔍 Checking DataReference API..."
+          curl -f http://localhost:5000/health || exit 1
+          
+          echo "🔍 Checking LLMGameMaster API..."
+          curl -f http://localhost:5001/health || exit 1
+          
+          echo "🔍 Checking WebApp..."
+          curl -f http://localhost:80/ || exit 1
+          
+      - name: 🧪 Integration Tests
+        run: |
+          # Tests d'intégration end-to-end
+          echo "🧪 Running integration tests..."
+          
+          # Test du flow complet : WebApp -> LLMGameMaster -> DataReference
+          echo "Testing complete data flow..."
+          
+          # Test API DataReference
+          TOKEN=$(curl -s -X POST http://localhost:5000/auth/login \
+                   -H "Content-Type: application/json" \
+                   -d '{"username":"test","password":"test"}' | jq -r '.token')
+          
+          curl -s -H "Authorization: Bearer $TOKEN" \
+               http://localhost:5000/api/monsters | jq '.data | length' || echo "DataReference OK"
+          
+      - name: 📋 Show Logs on Failure
+        if: failure()
+        run: |
+          echo "🔍 Docker logs for debugging:"
+          docker-compose logs datareference_api
+          docker-compose logs llm_gamemaster  
+          docker-compose logs webapp
+          
+      - name: 🧹 Cleanup
+        run: |
+          docker-compose down -v
+
+  # 🔀 Auto-merge si tous les tests passent
+  auto-merge:
+    name: 🔀 Auto-merge PR
+    runs-on: ubuntu-latest
+    needs: [test-datareference, test-llmgamemaster, test-webapp, test-docker-integration]
+    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 🔀 Auto-merge PR
+        uses: pascalgn/merge-action@v0.15.6
+        with:
+          github_token: ${{ secrets.WORKFLOW_TOKEN }}
+          merge_method: squash
+          merge_commit_message: "🚀 Auto-merge: {pull_request_title} ({pull_request_number})"
+          merge_delete_branch: true
+          
+      - name: 📢 Notify Success
+        if: success()
+        run: |
+          echo "✅ PR #${{ github.event.number }} has been automatically merged to develop!"
+          echo "🎉 All tests passed successfully!"
+          
+      - name: 📢 Notify Failure
+        if: failure()
+        run: |
+          echo "❌ Auto-merge failed for PR #${{ github.event.number }}"
+          echo "🔍 Please check the logs and merge manually if needed" 

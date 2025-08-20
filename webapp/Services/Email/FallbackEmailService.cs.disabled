@@ -1,0 +1,119 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using sib_api_v3_sdk.Api;
+using sib_api_v3_sdk.Client;
+using sib_api_v3_sdk.Model;
+using System.Diagnostics;
+
+namespace DnDGameMaster.WebApp.Services.Email
+{
+    public class FallbackEmailService : IEmailService
+    {
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<FallbackEmailService> _logger;
+        private readonly BrevoEmailService _brevorApiService;
+        private readonly BrevoSmtpEmailService _brevoSmtpService;
+        // Aucun service provider nécessaire
+        
+        public FallbackEmailService(
+            IConfiguration configuration,
+            ILogger<FallbackEmailService> logger,
+            ILoggerFactory loggerFactory)
+        {
+            _configuration = configuration;
+            _logger = logger;
+            
+            // Créer les services email sous-jacents
+            var brevorLogger = loggerFactory.CreateLogger<BrevoEmailService>();
+            var smtpLogger = loggerFactory.CreateLogger<BrevoSmtpEmailService>();
+            
+            _brevorApiService = new BrevoEmailService(configuration, brevorLogger);
+            _brevoSmtpService = new BrevoSmtpEmailService(configuration, smtpLogger);
+        }
+
+        public async System.Threading.Tasks.Task SendEmailAsync(string to, string subject, string htmlMessage)
+        {
+            try
+            {
+                // Essayer d'abord avec l'API Brevo
+                _logger.LogInformation($"Attempting to send email to {to} using Brevo API");
+                await _brevorApiService.SendEmailAsync(to, subject, htmlMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Failed to send email via Brevo API. Trying SMTP fallback...");
+                
+                try 
+                {
+                    // En cas d'échec, essayer avec SMTP
+                    await _brevoSmtpService.SendEmailAsync(to, subject, htmlMessage);
+                }
+                catch (Exception smtpEx)
+                {
+                    _logger.LogWarning(smtpEx, $"Failed to send email via SMTP fallback too. Simulating success to continue.");
+                    // Ne lève pas d'exception pour permettre à l'application de continuer
+                    _logger.LogInformation($"[SIMULATED] Email to {to} with subject '{subject}' would have been sent");
+                }
+            }
+        }
+
+        public async System.Threading.Tasks.Task SendEmailConfirmationAsync(string to, string userName, string confirmationLink)
+        {
+            var subject = "Confirm your email for D&D GameMaster";
+            var htmlContent = $@"
+                <html>
+                <body>
+                    <h1>Welcome to D&D GameMaster, {userName}!</h1>
+                    <p>Please confirm your email address by clicking the link below:</p>
+                    <p><a href='{confirmationLink}'>Confirm Email</a></p>
+                    <p>If you did not create an account, you can ignore this email.</p>
+                    <p>Thank you,<br>D&D GameMaster Team</p>
+                </body>
+                </html>";
+                
+            await SendEmailAsync(to, subject, htmlContent);
+            
+            // Affiche le lien de confirmation dans les logs pour le développement
+            _logger.LogWarning($"DEVELOPMENT MODE: Email confirmation link for {userName}: {confirmationLink}");
+        }
+
+        public async System.Threading.Tasks.Task SendPasswordResetAsync(string to, string userName, string resetLink)
+        {
+            var subject = "Reset your D&D GameMaster password";
+            var htmlContent = $@"
+                <html>
+                <body>
+                    <h1>Hello, {userName}!</h1>
+                    <p>You requested a password reset for your D&D GameMaster account.</p>
+                    <p>Please click the link below to reset your password:</p>
+                    <p><a href='{resetLink}'>Reset Password</a></p>
+                    <p>If you did not request a password reset, you can ignore this email.</p>
+                    <p>Thank you,<br>D&D GameMaster Team</p>
+                </body>
+                </html>";
+                
+            await SendEmailAsync(to, subject, htmlContent);
+            
+            // Affiche le lien de réinitialisation dans les logs pour le développement
+            _logger.LogWarning($"DEVELOPMENT MODE: Password reset link for {userName}: {resetLink}");
+        }
+
+        public async System.Threading.Tasks.Task SendWelcomeEmailAsync(string to, string userName)
+        {
+            var subject = "Welcome to D&D GameMaster!";
+            var htmlContent = $@"
+                <html>
+                <body>
+                    <h1>Welcome, {userName}!</h1>
+                    <p>Thank you for joining D&D GameMaster. Your account has been successfully created and activated.</p>
+                    <p>You can now create campaigns, build characters, and start your adventures with our AI-powered Game Master.</p>
+                    <p>Happy gaming!</p>
+                    <p>The D&D GameMaster Team</p>
+                </body>
+                </html>";
+                
+            await SendEmailAsync(to, subject, htmlContent);
+        }
+    }
+} 

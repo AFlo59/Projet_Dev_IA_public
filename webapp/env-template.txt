@@ -1,0 +1,60 @@
+# ===========================================================================
+# Configuration WebApp - Variables d'environnement  
+# ===========================================================================
+# Copier ce fichier en .env et remplir avec vos vraies valeurs
+
+# ---------------------------------------------------------------------------
+# Configuration de la base de données principale
+# ---------------------------------------------------------------------------
+# Base de données App (utilisateurs, campagnes, personnages)
+APP_DB_HOST=webapp_postgres
+APP_DB_PORT=5432
+APP_DB_NAME=app_db
+
+# Utilisateurs base de données (REMPLACER PAR VOS VALEURS)
+DB_ADMIN_USER=your_admin_user
+DB_ADMIN_PASSWORD=your_admin_password
+GAME_DB_USER=your_game_user
+GAME_DB_PASSWORD=your_game_password
+
+# ---------------------------------------------------------------------------
+# Configuration des services d'email
+# ---------------------------------------------------------------------------
+# Service Brevo (REMPLACER PAR VOS CLÉS)
+BREVO_API_KEY=xkeysib-your_brevo_api_key_here
+BREVO_SECRET_KEY=your_brevo_secret_key
+BREVO_FROM_EMAIL=your_email@domain.com
+BREVO_FROM_NAME="D&D GameMaster"
+
+# Service Mailjet (alternative - REMPLACER PAR VOS CLÉS)
+MAILJET_API_KEY=your_mailjet_api_key
+MAILJET_SECRET_KEY=your_mailjet_secret_key
+MAILJET_FROM_EMAIL=your_email@domain.com
+MAILJET_FROM_NAME="D&D GameMaster"
+
+# ---------------------------------------------------------------------------
+# URLs des APIs des services internes
+# ---------------------------------------------------------------------------
+# API DataReference (données de référence D&D)
+DATA_REFERENCE_API_URL=http://datareference_api:5000
+
+# API LLMGameMaster (intelligence artificielle)
+LLM_GAMEMASTER_API_URL=http://llm_gamemaster:5001
+
+# ---------------------------------------------------------------------------
+# Configuration JWT (même clé que DataReference)
+# ---------------------------------------------------------------------------
+# Clé secrète JWT (DOIT ÊTRE IDENTIQUE à datareference)
+JWT_SECRET_KEY=your_jwt_secret_key_here
+
+# Configuration JWT spécifique LLM (WebApp) - MÊME VALEUR que JWT_SECRET_KEY
+LLM_JWT_SECRET_KEY=your_jwt_secret_key_here
+LLM_JWT_EXPIRATION_HOURS=24
+LLM_ENABLE_AUTH=true
+
+# ---------------------------------------------------------------------------
+# Configuration des ports
+# ---------------------------------------------------------------------------
+# Ports externes WebApp
+WEBAPP_HTTP_PORT=80
+WEBAPP_HTTPS_PORT=443

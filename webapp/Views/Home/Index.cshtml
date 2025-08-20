@@ -1,0 +1,150 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="hero">
+    <div class="hero-content">
+        <h1>D&D GameMaster</h1>
+        <p>Your AI-powered assistant for Dungeons & Dragons adventures</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/Campaign/Create" class="btn btn-primary btn-lg">
+                <i class="fas fa-scroll me-2"></i>Start Your Campaign
+            </a>
+            <a href="/Campaign" class="btn btn-accent btn-lg">
+                <i class="fas fa-dice-d20 me-2"></i>Join a Campaign
+            </a>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    @if (User.IsInRole("Admin"))
+    {
+        <section class="mb-5">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>Administration Panel
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-tachometer-alt me-2"></i>Monitoring IA</h5>
+                            <p>Surveillez les performances de l'IA, les métriques et les alertes.</p>
+                            <a href="/Admin/Dashboard" class="btn btn-primary">
+                                <i class="fas fa-chart-line me-2"></i>Dashboard Monitoring
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-cog me-2"></i>Configuration</h5>
+                            <p>Gérez les seuils d'alerte et la configuration du système.</p>
+                            <a href="/Admin/AlertThresholds" class="btn btn-outline-primary">
+                                <i class="fas fa-cog me-2"></i>Configuration
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="btn-group" role="group">
+                                <a href="/Admin/Metrics" class="btn btn-outline-secondary">
+                                    <i class="fas fa-chart-bar me-2"></i>Métriques
+                                </a>
+                                <a href="/Admin/Logs" class="btn btn-outline-secondary">
+                                    <i class="fas fa-list me-2"></i>Logs
+                                </a>
+                                <a href="/Admin/Alerts" class="btn btn-outline-secondary">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Alertes
+                                </a>
+                                <a href="/Admin/Costs" class="btn btn-outline-secondary">
+                                    <i class="fas fa-dollar-sign me-2"></i>Coûts
+                                </a>
+                                <a href="/Admin/ModelPerformance" class="btn btn-outline-secondary">
+                                    <i class="fas fa-brain me-2"></i>Performance
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+
+    <section class="mb-5">
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="feature-card">
+                    <i class="fas fa-book-open"></i>
+                    <h3>Create a Campaign</h3>
+                    <p>Start by creating a campaign where your adventure will take place. Set the theme, invite friends, and prepare for epic quests.</p>
+                    <a href="/Campaign/Create" class="btn btn-primary mt-3">Create Campaign</a>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="feature-card">
+                    <i class="fas fa-dragon"></i>
+                    <h3>Play with AI</h3>
+                    <p>Join your campaign, create a character, and play with our AI Game Master that adapts to your choices and creates immersive narratives.</p>
+                    <a href="/Campaign" class="btn btn-primary mt-3">View Campaigns</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-5">
+        <h2 class="text-center mb-4">How It Works</h2>
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3>The Adventure Path</h3>
+                        <ol class="mt-4">
+                            <li class="mb-3">
+                                <strong>Create or join a campaign</strong> - Every adventure begins with a campaign setting
+                            </li>
+                            <li class="mb-3">
+                                <strong>Create a character for your campaign</strong> - Build a hero specifically for the campaign you've joined
+                            </li>
+                            <li class="mb-3">
+                                <strong>Select your campaign and play</strong> - Interact with the AI Game Master
+                            </li>
+                            <li class="mb-3">
+                                <strong>Embark on your journey</strong> - Experience dynamic storytelling that adapts to your choices
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3>Powered by AI</h3>
+                        <p class="mt-4">Our AI Game Master uses advanced language models to create immersive and dynamic storytelling:</p>
+                        <ul>
+                            <li class="mb-2">Contextual understanding of your characters and actions</li>
+                            <li class="mb-2">Access to comprehensive D&D reference data</li>
+                            <li class="mb-2">Narrative generation that adapts to player choices</li>
+                            <li class="mb-2">NPC interactions with distinct personalities</li>
+                            <li class="mb-2">Dynamic combat and skill challenge resolution</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">About D&D GameMaster</h3>
+            </div>
+            <div class="card-body">
+                <p>D&D GameMaster is an AI-powered platform designed to enhance your Dungeons & Dragons experience. Whether you're a seasoned player or new to the world of D&D, our tools help you create and manage characters, join campaigns, and enjoy immersive storytelling powered by advanced AI.</p>
+                <p>Our system provides access to comprehensive D&D reference data, helps Game Masters create rich campaigns, and uses AI to generate compelling narratives that adapt to player choices.</p>
+                <div class="text-center mt-4">
+                    <a href="/Campaign" class="btn btn-lg btn-primary">Get Started Now</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div> 

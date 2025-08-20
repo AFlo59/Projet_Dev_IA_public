@@ -1,0 +1,44 @@
+# ===========================================================================
+# .gitattributes - LLMGameMaster (IA/Python)
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SÉCURITÉ SPÉCIFIQUE IA
+# ---------------------------------------------------------------------------
+# Clés API - JAMAIS en clair
+openai_key.txt filter=git-crypt diff=git-crypt
+anthropic_key.txt filter=git-crypt diff=git-crypt
+api_keys.json filter=git-crypt diff=git-crypt
+
+# ---------------------------------------------------------------------------
+# FICHIERS IA/ML
+# ---------------------------------------------------------------------------
+# Modèles et poids (binaires, volumineux)
+*.model binary
+*.bin binary
+*.safetensors binary
+*.ckpt binary
+*.pt binary
+*.h5 binary
+
+# Embeddings et vecteurs
+*.vec binary
+*.npy binary
+*.npz binary
+
+# ---------------------------------------------------------------------------
+# TEMPLATES ET PROMPTS
+# ---------------------------------------------------------------------------
+# Templates Jinja2
+*.jinja2 text
+*.j2 text
+
+# Fichiers de prompts
+prompts/*.txt text
+templates/*.txt text
+
+# ---------------------------------------------------------------------------
+# IMAGES GÉNÉRÉES
+# ---------------------------------------------------------------------------
+# Toutes les images générées = linguist-generated
+static/images/* linguist-generated=true binary

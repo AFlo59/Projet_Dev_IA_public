@@ -1,0 +1,158 @@
+# ===========================================================================
+# .gitignore pour WebApp (.NET Core)
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Configuration sensible - NE PAS COMMITER
+# ---------------------------------------------------------------------------
+# Fichiers .env contenant les clés API et secrets
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Build .NET Core
+# ---------------------------------------------------------------------------
+# Build results
+bin/
+obj/
+out/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+packages/
+
+# ---------------------------------------------------------------------------
+# Runtime et logs
+# ---------------------------------------------------------------------------
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+logs/
+Logs/
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# ---------------------------------------------------------------------------
+# ASP.NET Core
+# ---------------------------------------------------------------------------
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# StyleCop
+StyleCopReport.xml
+
+# Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# ---------------------------------------------------------------------------
+# Fichiers IDE et éditeurs
+# ---------------------------------------------------------------------------
+# Visual Studio
+.vs/
+*.vscode/
+
+# JetBrains Rider
+.idea/
+
+# Fichiers temporaires
+*~
+*.swp
+*.swo
+
+# ---------------------------------------------------------------------------
+# Fichiers système
+# ---------------------------------------------------------------------------
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ---------------------------------------------------------------------------
+# Spécifique WebApp (.NET Core)
+# ---------------------------------------------------------------------------
+# Images uploadées par les utilisateurs (volumineuses)
+wwwroot/images/characters/*.png
+wwwroot/images/characters/*.jpg
+wwwroot/images/npcs/*.png
+wwwroot/images/npcs/*.jpg
+wwwroot/images/locations/*.png
+wwwroot/images/locations/*.jpg
+wwwroot/uploads/
+
+# Fichiers de publication
+publish/
+PublishProfiles/
+
+# Entity Framework migrations temporaires
+Migrations/temp_*
+*.edmx.diagram
+*.edmx.sql
+
+# Fichiers de session/état
+App_Data/
+SessionState/
+
+# Certificats SSL
+*.crt
+*.csr
+*.p7b
+*.spc
+*.cer
+
+# Configuration de déploiement
+web.config.bak
+appsettings.Local.json
+launchSettings.json.bak
+
+# Tests et couverture
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# NuGet local
+.nuget/
+nuget.exe

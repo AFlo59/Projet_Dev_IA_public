@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "Registration Confirmation";
+    bool isAutoConfirmed = (TempData?["AutoConfirmed"]?.ToString() == "True");
+    bool isEmailResent = (TempData?["EmailResent"]?.ToString() == "True");
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header">
+                <h2 class="text-center">
+                    @if (isEmailResent)
+                    {
+                        <span>Confirmation Email Resent</span>
+                    }
+                    else
+                    {
+                        <span>Registration Successful</span>
+                    }
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    @if (isAutoConfirmed)
+                    {
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h3>Your Account is Ready!</h3>
+                        <p class="lead">
+                            Your account has been automatically confirmed and is ready to use.
+                        </p>
+                    }
+                    else if (isEmailResent)
+                    {
+                        <i class="fas fa-paper-plane fa-4x text-primary mb-3"></i>
+                        <h3>Confirmation Email Sent Again</h3>
+                        <p class="lead">
+                            We've resent the confirmation email. Please check your inbox and click on the confirmation link.
+                        </p>
+                    }
+                    else
+                    {
+                        <i class="fas fa-envelope fa-4x text-primary mb-3"></i>
+                        <h3>Check Your Email</h3>
+                        <p class="lead">
+                            We've sent a confirmation email to your address. Please check your inbox and click on the confirmation link.
+                        </p>
+                        <p>
+                            @{
+                                var userEmail = TempData["UserEmail"]?.ToString() ?? string.Empty;
+                            }
+                            @if (!string.IsNullOrEmpty(userEmail))
+                            {
+                                <a asp-action="ResendConfirmationEmail" asp-route-email="@userEmail" class="btn btn-link">Click here to resend</a>
+                            }
+                            else
+                            {
+                                <a asp-action="ResendConfirmationEmail" class="btn btn-link">Click here to resend</a>
+                            }
+                        </p>
+                    }
+                </div>
+                
+                @if (isAutoConfirmed)
+                {
+                    <div class="alert alert-success">
+                        <p><i class="fas fa-check-circle"></i> <strong>Your account has been automatically confirmed!</strong> You can now login without checking your email.</p>
+                        <p class="small text-muted mt-1"><i class="fas fa-info-circle"></i> Development mode: Email confirmation has been bypassed due to email service unavailability.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <p><i class="fas fa-info-circle"></i> If you don't see the email, please check your spam folder or contact support.</p>
+                    </div>
+                }
+                
+                <hr />
+                
+                <div class="text-center mt-4">
+                    @if (isAutoConfirmed)
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i> Log in now
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100">Return to Home</a>
+                            </div>
+                            <div class="col-6">
+                                <a asp-controller="Account" asp-action="Login" class="btn btn-primary w-100">Go to Login</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

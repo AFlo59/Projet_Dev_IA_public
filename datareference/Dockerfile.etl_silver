@@ -1,0 +1,33 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    netcat-openbsd \
+    postgresql-client \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the transformation script and helper scripts
+COPY bronze_to_silver.py .
+COPY wait-for-it.sh .
+COPY check_tables.py .
+
+# Set execute permissions
+RUN chmod +x bronze_to_silver.py
+RUN chmod +x wait-for-it.sh
+RUN chmod +x check_tables.py
+
+# Note: Database connection parameters are provided via environment variables from docker-compose  
+# No hardcoded credentials in the image for security
+
+# Use wait-for-it.sh to wait for both databases before running the script
+# First wait for bronze, then for silver, then run the transformation
+ENTRYPOINT ["./wait-for-it.sh", "datareference_bronze_postgres:5432", "-t", "300", "--", "./wait-for-it.sh", "datareference_silver_postgres:5432", "-t", "300", "--", "python", "bronze_to_silver.py"] 

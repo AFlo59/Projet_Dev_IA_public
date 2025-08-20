@@ -1,0 +1,47 @@
+@using Microsoft.AspNetCore.Identity
+@using DnDGameMaster.WebApp.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="Profile" title="Manage">Hello @(UserManager.GetUserAsync(User).Result?.FirstName ?? "User")!</a>
+    </li>
+    
+    @if (User.IsInRole("Admin"))
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-light" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-cogs me-1"></i> Administration
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a></li>
+                <li><a class="dropdown-item" asp-controller="Admin" asp-action="Metrics"><i class="fas fa-chart-bar me-2"></i> Métriques</a></li>
+                <li><a class="dropdown-item" asp-controller="Admin" asp-action="Logs"><i class="fas fa-list me-2"></i> Logs</a></li>
+                <li><a class="dropdown-item" asp-controller="Admin" asp-action="Alerts"><i class="fas fa-exclamation-triangle me-2"></i> Alertes</a></li>
+                <li><a class="dropdown-item" asp-controller="Admin" asp-action="Costs"><i class="fas fa-dollar-sign me-2"></i> Coûts</a></li>
+                <li><a class="dropdown-item" asp-controller="Admin" asp-action="ModelPerformance"><i class="fas fa-brain me-2"></i> Performance Modèles</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" asp-controller="Admin" asp-action="AlertThresholds"><i class="fas fa-cog me-2"></i> Configuration</a></li>
+            </ul>
+        </li>
+    }
+    
+    <li class="nav-item">
+        <form class="form-inline" asp-area="" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button type="submit" class="nav-link btn btn-link text-light">Logout</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+    </li>
+}
+</ul> 

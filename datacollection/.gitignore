@@ -1,0 +1,129 @@
+# ===========================================================================
+# .gitignore pour DataCollection
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Configuration sensible - NE PAS COMMITER
+# ---------------------------------------------------------------------------
+# Fichiers .env contenant les clés API et secrets
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# DONNÉES COLLECTÉES (volumineuses)
+# ---------------------------------------------------------------------------
+# Dossier de sortie complet
+Output/
+output/
+
+# Fichiers JSON collectés
+*.json
+!requirements.json
+!package.json
+
+# Images téléchargées
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.bmp
+
+# ---------------------------------------------------------------------------
+# FICHIERS PYTHON STANDARD
+# ---------------------------------------------------------------------------
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environnements virtuels Python
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ---------------------------------------------------------------------------
+# LOGS ET TEMPORAIRE
+# ---------------------------------------------------------------------------
+# Logs de scraping
+*.log
+logs/
+Logs/
+scraping.log
+download.log
+
+# Fichiers temporaires
+temp/
+tmp/
+cache/
+.cache/
+
+# ---------------------------------------------------------------------------
+# SPÉCIFIQUE DATA COLLECTION
+# ---------------------------------------------------------------------------
+# Backups de données
+backup_*.json
+*.json.bak
+*.json.old
+
+# Fichiers de cache de scraping
+scrapy_cache/
+requests_cache/
+.scrapy/
+
+# Fichiers de progression
+progress.txt
+.progress
+download_progress.json
+
+# ---------------------------------------------------------------------------
+# FICHIERS IDE ET ÉDITEURS
+# ---------------------------------------------------------------------------
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Fichiers temporaires
+*~
+*.swp
+*.swo
+
+# ---------------------------------------------------------------------------
+# FICHIERS SYSTÈME
+# ---------------------------------------------------------------------------
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.nfs*

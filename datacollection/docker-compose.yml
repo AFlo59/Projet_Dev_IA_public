@@ -1,0 +1,14 @@
+﻿services:
+  datacollection:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: datacollection
+    env_file:
+      - .env
+    volumes:
+      - ./Output:/app/Output
+      - ./Logs:/app/Logs
+    # Override de la commande (même si l'ENTRYPOINT la définit déjà)
+    restart: "no"
+

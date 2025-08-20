@@ -1,0 +1,262 @@
+@model IEnumerable<DnDGameMaster.WebApp.Models.AIModelPerformance>
+@{
+    ViewData["Title"] = "Performance des Modèles IA";
+    var performanceData = Model.ToList();
+    var hasData = performanceData.Any();
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-brain text-primary"></i> Performance des Modèles IA
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary" onclick="exportPerformance()">
+                <i class="fas fa-download"></i> Exporter
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="fromDate" class="form-label">Date de début</label>
+                    <input type="date" class="form-control" id="fromDate" name="fromDate" value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label for="toDate" class="form-label">Date de fin</label>
+                    <input type="date" class="form-control" id="toDate" name="toDate" value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label for="modelName" class="form-label">Modèle</label>
+                    <select class="form-select" id="modelName" name="modelName">
+                        <option value="">Tous</option>
+                        @{
+                            var distinctModelNames = performanceData.Select(m => m.ModelName).Distinct().OrderBy(m => m).ToList();
+                        }
+                        @foreach (var modelName in distinctModelNames)
+                        {
+                            if (ViewBag.ModelName?.ToString() == modelName)
+                            {
+                                <option value="@modelName" selected>@modelName</option>
+                            }
+                            else
+                            {
+                                <option value="@modelName">@modelName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                    <a href="@Url.Action("ModelPerformance")" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Résumé des performances -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Taux de Succès Moyen
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @{
+                                    var successRate = hasData ? performanceData.Average(p => p.SuccessRate).ToString("F1") + "%" : "0%";
+                                }
+                                @successRate
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Taux d'Erreur Moyen
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @{
+                                    var errorRate = hasData ? performanceData.Average(p => p.ErrorRate).ToString("F1") + "%" : "0%";
+                                }
+                                @errorRate
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Temps de Réponse Moyen
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @{
+                                    var avgResponseTime = hasData ? (performanceData.Average(p => p.AverageResponseTime) / 1000.0).ToString("F1") + "s" : "0s";
+                                }
+                                @avgResponseTime
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Requêtes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @performanceData.Sum(p => p.TotalRequests).ToString("N0")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des performances -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Détail des Performances</h6>
+        </div>
+        <div class="card-body">
+            @if (hasData)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="performanceTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Modèle</th>
+                                <th>Fournisseur</th>
+                                <th>Temps de Réponse</th>
+                                <th>Taux de Succès</th>
+                                <th>Taux d'Erreur</th>
+                                <th>Requêtes</th>
+                                <th>Erreurs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var perf in performanceData.OrderByDescending(p => p.Date))
+                            {
+                                <tr>
+                                    <td>@perf.Date.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <span class="badge bg-primary">@perf.ModelName</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@perf.Provider</span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var responseTimeClass = perf.AverageResponseTime < 5000 ? "text-success" : perf.AverageResponseTime < 10000 ? "text-warning" : "text-danger";
+                                            var responseTimeValue = (perf.AverageResponseTime / 1000.0).ToString("F1") + "s";
+                                        }
+                                        <span class="font-weight-bold @responseTimeClass">
+                                            @responseTimeValue
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var successClass = perf.SuccessRate >= 95 ? "bg-success" : perf.SuccessRate >= 80 ? "bg-warning" : "bg-danger";
+                                        }
+                                        <span class="badge @successClass">
+                                            @perf.SuccessRate.ToString("F1")%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var errorClass = perf.ErrorRate <= 5 ? "bg-success" : perf.ErrorRate <= 20 ? "bg-warning" : "bg-danger";
+                                        }
+                                        <span class="badge @errorClass">
+                                            @perf.ErrorRate.ToString("F1")%
+                                        </span>
+                                    </td>
+                                    <td class="font-weight-bold">@perf.TotalRequests.ToString("N0")</td>
+                                    <td class="text-danger">@perf.TotalErrors.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-brain fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">Aucune donnée de performance</h5>
+                    <p class="text-gray-400">Les performances des modèles apparaîtront ici une fois que des opérations auront été effectuées.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function exportPerformance() {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            const modelName = document.getElementById('modelName').value;
+            
+            const url = '@Url.Action("ExportPerformance")' + 
+                '?fromDate=' + fromDate + 
+                '&toDate=' + toDate + 
+                '&modelName=' + modelName;
+            
+            window.location.href = url;
+        }
+
+        $(document).ready(function() {
+            $('#performanceTable').DataTable({
+                "order": [[0, "desc"]],
+                "pageLength": 25,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
+                }
+            });
+        });
+    </script>
+} 

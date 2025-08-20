@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Email Confirmed";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header">
+                <h2 class="text-center">Email Confirmed!</h2>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h3>Your Account is Ready!</h3>
+                    <p class="lead">
+                        Thank you for confirming your email address. Your account is now active and ready to use.
+                    </p>
+                    <p>
+                        You can now log in and start creating characters, joining campaigns, and embarking on adventures!
+                    </p>
+                </div>
+                <div class="text-center mt-4">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i> Log in now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,338 @@
+@model IEnumerable<DnDGameMaster.WebApp.Models.AIAlerts>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Alertes IA - Administration";
+    var level = ViewBag.Level as string;
+    var resolved = ViewBag.Resolved as string;
+    var levelOptions = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "", Text = "Tous", Selected = string.IsNullOrEmpty(level) },
+        new SelectListItem { Value = "INFO", Text = "INFO", Selected = level == "INFO" },
+        new SelectListItem { Value = "WARNING", Text = "WARNING", Selected = level == "WARNING" },
+        new SelectListItem { Value = "ERROR", Text = "ERROR", Selected = level == "ERROR" }
+    };
+    var resolvedOptions = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "", Text = "Tous", Selected = string.IsNullOrEmpty(resolved) },
+        new SelectListItem { Value = "false", Text = "Non résolues", Selected = resolved == "false" },
+        new SelectListItem { Value = "true", Text = "Résolues", Selected = resolved == "true" }
+    };
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-exclamation-triangle text-primary"></i>
+                Alertes IA
+            </h1>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row">
+                        <div class="col-md-3">
+                            <label for="fromDate" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                                   value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="toDate" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="toDate" name="toDate" 
+                                   value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-2">
+                            <label for="level" class="form-label">Niveau</label>
+                            <select class="form-control" id="level" name="level">
+                                @foreach (var opt in levelOptions)
+                                {
+                                    var selected = opt.Selected ? " selected" : "";
+                                    @Html.Raw($"<option value=\"{opt.Value}\"{selected}>{opt.Text}</option>")
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="resolved" class="form-label">Statut</label>
+                            <select class="form-control" id="resolved" name="resolved">
+                                @foreach (var opt in resolvedOptions)
+                                {
+                                    var selected = opt.Selected ? " selected" : "";
+                                    @Html.Raw($"<option value=\"{opt.Value}\"{selected}>{opt.Text}</option>")
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Filtrer
+                                </button>
+                                <a href="@Url.Action("Alerts", "Admin")" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Réinitialiser
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Alertes IA</h6>
+                    <a href="@Url.Action("ExportAlerts", "Admin", new { fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, level = ViewBag.Level })" 
+                       class="btn btn-success btn-sm">
+                        <i class="fas fa-download"></i> Exporter CSV
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Niveau</th>
+                                        <th>Type</th>
+                                        <th>Titre</th>
+                                        <th>Message</th>
+                                        <th>Statut</th>
+                                        <th>Résolu par</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var alert in Model)
+                                    {
+                                        <tr class="@(alert.AlertLevel == "ERROR" ? "table-danger" : alert.AlertLevel == "WARNING" ? "table-warning" : "table-info")">
+                                            <td>@alert.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                            <td>
+                                                <span class="badge badge-@(alert.AlertLevel.ToLower())">
+                                                    @alert.AlertLevel
+                                                </span>
+                                            </td>
+                                            <td>@alert.AlertType</td>
+                                            <td>@(alert.AlertTitle ?? "-")</td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 300px;" title="@alert.AlertMessage">
+                                                    @alert.AlertMessage
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if (alert.IsResolved)
+                                                {
+                                                    <span class="badge badge-success">
+                                                        <i class="fas fa-check"></i> Résolu
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-warning">
+                                                        <i class="fas fa-clock"></i> En attente
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>@(alert.ResolvedBy ?? "-")</td>
+                                            <td>
+                                                @if (!alert.IsResolved)
+                                                {
+                                                    <button class="btn btn-success btn-sm" onclick="resolveAlert(@alert.Id)">
+                                                        <i class="fas fa-check"></i> Résoudre
+                                                    </button>
+                                                }
+                                                <button class="btn btn-info btn-sm" onclick="viewAlertDetails(@alert.Id)">
+                                                    <i class="fas fa-eye"></i> Détails
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p>Aucune alerte trouvée pour les critères sélectionnés.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Répartition par niveau</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="levelChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Répartition par type</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="typeChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les détails d'alerte -->
+<div class="modal fade" id="alertDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de l'alerte</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="alertDetailsContent">
+                <!-- Contenu dynamique -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Données pour les graphiques
+        const alertsData = @Html.Raw(Json.Serialize(Model));
+
+        // Répartition par niveau
+        const levelCounts = {};
+        alertsData.forEach(alert => {
+            levelCounts[alert.alertLevel] = (levelCounts[alert.alertLevel] || 0) + 1;
+        });
+
+        const levelCtx = document.getElementById('levelChart').getContext('2d');
+        new Chart(levelCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(levelCounts),
+                datasets: [{
+                    data: Object.values(levelCounts),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(54, 162, 235, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Répartition par type
+        const typeCounts = {};
+        alertsData.forEach(alert => {
+            typeCounts[alert.alertType] = (typeCounts[alert.alertType] || 0) + 1;
+        });
+
+        const typeCtx = document.getElementById('typeChart').getContext('2d');
+        new Chart(typeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(typeCounts),
+                datasets: [{
+                    data: Object.values(typeCounts),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Fonctions pour les actions
+        function resolveAlert(alertId) {
+            if (confirm('Êtes-vous sûr de vouloir marquer cette alerte comme résolue ?')) {
+                fetch(`/Admin/ResolveAlert/${alertId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Erreur lors de la résolution de l\'alerte');
+                    }
+                });
+            }
+        }
+
+        function viewAlertDetails(alertId) {
+            fetch(`/Admin/AlertDetails/${alertId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('alertDetailsContent').innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Titre :</strong> ${data.alertTitle || 'N/A'}</p>
+                                <p><strong>Type :</strong> ${data.alertType}</p>
+                                <p><strong>Niveau :</strong> ${data.alertLevel}</p>
+                                <p><strong>Créé le :</strong> ${new Date(data.createdAt).toLocaleString()}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Statut :</strong> ${data.isResolved ? 'Résolu' : 'En attente'}</p>
+                                <p><strong>Résolu par :</strong> ${data.resolvedBy || 'N/A'}</p>
+                                <p><strong>Résolu le :</strong> ${data.resolvedAt ? new Date(data.resolvedAt).toLocaleString() : 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <p><strong>Message :</strong></p>
+                                <div class="alert alert-info">${data.alertMessage}</div>
+                            </div>
+                        </div>
+                    `;
+                    $('#alertDetailsModal').modal('show');
+                });
+        }
+    </script>
+} 

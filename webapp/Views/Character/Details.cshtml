@@ -1,0 +1,259 @@
+@model DnDGameMaster.WebApp.Controllers.CharacterDetailsViewModel
+
+@{
+    ViewData["Title"] = $"{Model.Character.Name} - Character Details";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-user-shield me-2"></i>@Model.Character.Name</h1>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Character.Id" class="btn btn-primary">
+                <i class="fas fa-edit me-2"></i>Edit Character
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="character-portrait-container">
+                    <div class="character-portrait-large">
+                        @if (!string.IsNullOrEmpty(Model.Character.PortraitUrl))
+                        {
+                            <img src="@Model.Character.PortraitUrl" class="img-fluid rounded" alt="@Model.Character.Name portrait" />
+                        }
+                        else
+                        {
+                            <img src="https://www.dndbeyond.com/avatars/default-avatar.png" class="img-fluid rounded" alt="Default character portrait" />
+                        }
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Character Stats</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-grid">
+                            @foreach (var stat in Model.Character.Stats)
+                            {
+                                var modifier = Math.Floor((stat.Value - 10) / 2.0);
+                                var modifierDisplay = modifier >= 0 ? $"+{modifier}" : $"{modifier}";
+                                
+                                <div class="stat-item">
+                                    <div class="stat-name">@stat.Key</div>
+                                    <div class="stat-value">@stat.Value</div>
+                                    <div class="stat-modifier">@modifierDisplay</div>
+                                </div>
+                            }
+                        </div>
+                        
+                        <hr />
+                        
+                        <div class="derived-stats">
+                            <div class="derived-stat">
+                                <span class="stat-label">Armor Class</span>
+                                <span class="stat-value">@(10 + Math.Floor((Model.Character.Stats.GetValueOrDefault("DEX", 10) - 10) / 2.0))</span>
+                            </div>
+                            <div class="derived-stat">
+                                <span class="stat-label">Hit Points</span>
+                                <span class="stat-value">@(Model.Character.Level * 8)</span>
+                            </div>
+                            <div class="derived-stat">
+                                <span class="stat-label">Speed</span>
+                                <span class="stat-value">30 ft</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="character-details">
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">Class</span>
+                            <span class="detail-value">@Model.Character.Class</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Race</span>
+                            <span class="detail-value">@Model.Character.Race</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Level</span>
+                            <span class="detail-value">@Model.Character.Level</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">Background</span>
+                            <span class="detail-value">@Model.Character.Background</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Alignment</span>
+                            <span class="detail-value">@Model.Character.Alignment</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Created</span>
+                            <span class="detail-value">@Model.Character.CreatedAt.ToString("MMM d, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Character Description</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="character-description">@Html.Raw(Model.Character.Description?.Replace("\n", "<br />"))</p>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Equipment</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>@Html.Raw(Model.Character.Equipment?.Replace("\n", "<br />"))</p>
+                    </div>
+                </div>
+                
+                @if (Model.Campaigns.Any())
+                {
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h3>Campaigns</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                @foreach (var campaign in Model.Campaigns)
+                                {
+                                    <a href="@Url.Action("Details", "Campaign", new { id = campaign.Id })" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">@campaign.Name</h5>
+                                            <small>@campaign.CreatedAt.ToString("MMM d, yyyy")</small>
+                                        </div>
+                                        <p class="mb-1">@campaign.Description?.Substring(0, Math.Min(100, campaign.Description?.Length ?? 0))@(campaign.Description?.Length > 100 ? "..." : "")</p>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex gap-2 mt-4">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to List
+    </a>
+    <a asp-action="Delete" asp-route-id="@Model.Character.Id" class="btn btn-danger">
+        <i class="fas fa-trash-alt me-2"></i>Delete Character
+    </a>
+</div>
+
+<style>
+    .character-portrait-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .character-portrait-large {
+        width: 300px;
+        height: 300px;
+        overflow: hidden;
+        border: 3px solid #343a40;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+    }
+    
+    .character-portrait-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+    }
+    
+    .stat-name {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0.25rem 0;
+    }
+    
+    .stat-modifier {
+        font-size: 1rem;
+        color: #007bff;
+    }
+    
+    .derived-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+    }
+    
+    .derived-stat {
+        text-align: center;
+        flex: 1;
+    }
+    
+    .stat-label {
+        display: block;
+        font-weight: bold;
+        color: #6c757d;
+    }
+    
+    .character-details {
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-item {
+        flex: 1;
+        background-color: #f8f9fa;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-right: 0.5rem;
+    }
+    
+    .detail-label {
+        display: block;
+        font-weight: bold;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-value {
+        font-size: 1.2rem;
+    }
+    
+    .character-description {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+</style> 

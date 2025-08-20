@@ -1,0 +1,11 @@
+Professional headshot portrait of {{ character.name }}, {{ character.gender or "unknown gender" }} {{ character.race }} {{ character.class }}, level {{ character.level }}. 
+
+{% if character.physical_appearance %}
+Physical appearance: {{ character.physical_appearance[:350] }}
+{% endif %}
+
+{{ character.alignment }} alignment, {{ character.background }} background. STR:{{ character.strength }} DEX:{{ character.dexterity }} CON:{{ character.constitution }} INT:{{ character.intelligence }} WIS:{{ character.wisdom }} CHA:{{ character.charisma }}. {{ campaign.settings }} setting.
+
+IMPORTANT FRAMING: Close-up headshot, head and shoulders only, face completely visible and centered in frame, no cropping of head or face edges. Professional portrait photography, shot with 85mm lens, shallow depth of field, studio lighting, photojournalism style. Realistic human face, lifelike skin texture, natural lighting, sharp focus on eyes, detailed facial features, realistic human proportions. Character wearing appropriate {{ character.class }} attire and {{ character.background }} style clothing.
+
+Photorealistic, not digital art, not fantasy art, not anime, not illustration, not painting. Real photography aesthetic, documentary style portrait, professional headshot composition, head fully in frame. 

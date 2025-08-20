@@ -1,0 +1,240 @@
+@model IEnumerable<DnDGameMaster.WebApp.Models.AILogs>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Logs IA - Administration";
+    var level = ViewBag.Level as string;
+    var levelOptions = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "", Text = "Tous", Selected = string.IsNullOrEmpty(level) },
+        new SelectListItem { Value = "DEBUG", Text = "DEBUG", Selected = level == "DEBUG" },
+        new SelectListItem { Value = "INFO", Text = "INFO", Selected = level == "INFO" },
+        new SelectListItem { Value = "WARNING", Text = "WARNING", Selected = level == "WARNING" },
+        new SelectListItem { Value = "ERROR", Text = "ERROR", Selected = level == "ERROR" }
+    };
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-list text-primary"></i>
+                Logs IA
+            </h1>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row">
+                        <div class="col-md-3">
+                            <label for="fromDate" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                                   value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="toDate" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="toDate" name="toDate" 
+                                   value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-2">
+                            <label for="level" class="form-label">Niveau</label>
+                            <select class="form-control" id="level" name="level">
+                                @foreach (var opt in levelOptions)
+                                {
+                                    var selected = opt.Selected ? " selected" : "";
+                                    @Html.Raw($"<option value=\"{opt.Value}\"{selected}>{opt.Text}</option>")
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="category" class="form-label">Catégorie</label>
+                            <input type="text" class="form-control" id="category" name="category" 
+                                   value="@ViewBag.Category" placeholder="Toutes" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Filtrer
+                                </button>
+                                <a href="@Url.Action("Logs", "Admin")" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Réinitialiser
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Logs IA</h6>
+                    <a href="@Url.Action("ExportLogs", "Admin", new { fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, level = ViewBag.Level })" 
+                       class="btn btn-success btn-sm">
+                        <i class="fas fa-download"></i> Exporter CSV
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Date/Heure</th>
+                                        <th>Niveau</th>
+                                        <th>Catégorie</th>
+                                        <th>Message</th>
+                                        <th>Modèle</th>
+                                        <th>Provider</th>
+                                        <th>Temps (ms)</th>
+                                        <th>Tokens</th>
+                                        <th>Coût</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var log in Model)
+                                    {
+                                        <tr class="@(log.LogLevel == "ERROR" ? "table-danger" : log.LogLevel == "WARNING" ? "table-warning" : "")">
+                                            <td>@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                            <td>
+                                                <span class="badge badge-@(log.LogLevel.ToLower())">
+                                                    @log.LogLevel
+                                                </span>
+                                            </td>
+                                            <td>@(log.LogCategory ?? "-")</td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 300px;" title="@log.LogMessage">
+                                                    @log.LogMessage
+                                                </div>
+                                            </td>
+                                            <td>@(log.ModelName ?? "-")</td>
+                                            <td>@(log.Provider ?? "-")</td>
+                                            <td>@(log.ResponseTime?.ToString() ?? "-")</td>
+                                            <td>@(log.TokensUsed?.ToString() ?? "-")</td>
+                                            <td>@(log.Cost?.ToString("F6") ?? "-")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <i class="fas fa-list fa-3x mb-3"></i>
+                            <p>Aucun log trouvé pour les critères sélectionnés.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Répartition par niveau</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="levelChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Répartition par catégorie</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Données pour les graphiques
+        const logsData = @Html.Raw(Json.Serialize(Model));
+
+        // Répartition par niveau
+        const levelCounts = {};
+        logsData.forEach(log => {
+            levelCounts[log.logLevel] = (levelCounts[log.logLevel] || 0) + 1;
+        });
+
+        const levelCtx = document.getElementById('levelChart').getContext('2d');
+        new Chart(levelCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(levelCounts),
+                datasets: [{
+                    data: Object.values(levelCounts),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Répartition par catégorie
+        const categoryCounts = {};
+        logsData.forEach(log => {
+            const category = log.logCategory || 'Autre';
+            categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        });
+
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(categoryCounts),
+                datasets: [{
+                    data: Object.values(categoryCounts),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+} 

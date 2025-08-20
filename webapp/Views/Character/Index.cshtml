@@ -1,0 +1,118 @@
+@model IEnumerable<DnDGameMaster.WebApp.Models.Character>
+
+@{
+    ViewData["Title"] = "Characters";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-user-shield me-2"></i>@ViewData["Title"]</h1>
+        <p class="text-muted">Manage your characters for D&D campaigns</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New Character
+        </a>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row" id="charactersContainer">
+        @foreach (var character in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4 character-item">
+                <div class="card h-100 character-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">@character.Name</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge bg-primary">@character.Race</span>
+                            <span class="badge bg-secondary">@character.Class</span>
+                            <span class="badge bg-info">Level @character.Level</span>
+                        </div>
+                        
+                        <div class="character-stats">
+                            @foreach (var stat in character.Stats)
+                            {
+                                <span class="stat-badge">@stat.Key: @stat.Value</span>
+                            }
+                        </div>
+                        
+                        <hr class="my-3">
+                        
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="fas fa-shield-alt me-1"></i>AC: 10</span>
+                            <span><i class="fas fa-heart me-1"></i>HP: @(character.Level * 8)</span>
+                            <span><i class="fas fa-running me-1"></i>Speed: 30</span>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a asp-action="Details" asp-route-id="@character.Id" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-info-circle me-1"></i>Details
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@character.Id" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <div class="text-center mt-3">
+        <p class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Characters can be selected when playing in a campaign
+        </p>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <div class="d-flex">
+            <div class="me-3">
+                <i class="fas fa-info-circle fa-2x"></i>
+            </div>
+            <div>
+                <h4>No Characters Yet</h4>
+                <p>You don't have any characters yet. Create one to get started with your D&D adventures!</p>
+                <a asp-action="Create" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>Create Character
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3 class="mb-0"><i class="fas fa-question-circle me-2"></i>Why Create a Character?</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-theater-masks fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="text-center">Role-Playing</h4>
+                    <p>Create unique personalities for your adventures with distinct traits, backgrounds, and motivations.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-gamepad fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="text-center">Gameplay</h4>
+                    <p>Different classes and races provide unique abilities and playstyles for varied gaming experiences.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-users fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="text-center">Campaigns</h4>
+                    <p>Join campaigns with your characters and embark on epic adventures with the AI Game Master.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+} 

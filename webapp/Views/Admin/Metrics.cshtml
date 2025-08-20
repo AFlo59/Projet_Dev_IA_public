@@ -1,0 +1,315 @@
+@model IEnumerable<DnDGameMaster.WebApp.Models.AIMetrics>
+@{
+    ViewData["Title"] = "Métriques IA - Administration";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-chart-line text-primary"></i>
+                Métriques IA
+            </h1>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row">
+                        <div class="col-md-3">
+                            <label for="fromDate" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                                   value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="toDate" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="toDate" name="toDate" 
+                                   value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-2">
+                            <label for="metricName" class="form-label">Métrique</label>
+                            <input type="text" class="form-control" id="metricName" name="metricName" 
+                                   value="@ViewBag.MetricName" placeholder="Toutes" />
+                        </div>
+                        <div class="col-md-2">
+                            <label for="modelName" class="form-label">Modèle</label>
+                            <input type="text" class="form-control" id="modelName" name="modelName" 
+                                   value="@ViewBag.ModelName" placeholder="Tous" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Filtrer
+                                </button>
+                                <a href="@Url.Action("Metrics", "Admin")" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Réinitialiser
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métriques -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Métriques IA</h6>
+                    <a href="@Url.Action("ExportMetrics", "Admin", new { fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, metricName = ViewBag.MetricName })" 
+                       class="btn btn-success btn-sm">
+                        <i class="fas fa-download"></i> Exporter CSV
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Total Métriques</h6>
+                                        <h3>@Model.Count()</h3>
+                                        <small>Période sélectionnée</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Temps Réponse Moyen</h6>
+                                        <h3>@{
+                                            var avgResponseTime = Model.Where(m => m.MetricName == "response_time" || m.MetricName == "llm_response_time").DefaultIfEmpty().Average(m => m?.MetricValue ?? 0);
+                                        }@avgResponseTime.ToString("N0")ms</h3>
+                                        <small>Toutes requêtes</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Modèles Utilisés</h6>
+                                        <h3>@Model.Where(m => !string.IsNullOrEmpty(m.ModelName)).Select(m => m.ModelName).Distinct().Count()</h3>
+                                        <small>Types différents</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Campagnes Actives</h6>
+                                        <h3>@Model.Where(m => m.CampaignId.HasValue).Select(m => m.CampaignId).Distinct().Count()</h3>
+                                        <small>Avec activité</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date/Heure</th>
+                                        <th>Métrique</th>
+                                        <th>Valeur</th>
+                                        <th>Unité</th>
+                                        <th>Modèle</th>
+                                        <th>Provider</th>
+                                        <th>Campagne</th>
+                                        <th>Utilisateur</th>
+                                        <th>Détails</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var metric in Model.OrderByDescending(m => m.Timestamp))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <small>@metric.Timestamp.ToString("dd/MM/yyyy")</small><br>
+                                                <strong>@metric.Timestamp.ToString("HH:mm:ss")</strong>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var badgeClass = metric.MetricName switch
+                                                    {
+                                                        "response_time" => "bg-primary",
+                                                        "llm_response_time" => "bg-info", 
+                                                        "tokens_used" => "bg-success",
+                                                        "request_success" => "bg-success",
+                                                        "request_error" => "bg-danger",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @badgeClass">@metric.MetricName</span>
+                                            </td>
+                                            <td>
+                                                @if (metric.MetricName == "response_time" || metric.MetricName == "llm_response_time")
+                                                {
+                                                    <span class="@(metric.MetricValue > 5000 ? "text-danger fw-bold" : metric.MetricValue > 2000 ? "text-warning fw-bold" : "text-success fw-bold")">
+                                                        @metric.MetricValue.ToString("N0")
+                                                    </span>
+                                                }
+                                                else if (metric.MetricName == "tokens_used")
+                                                {
+                                                    <span class="text-info fw-bold">@metric.MetricValue.ToString("N0")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="fw-bold">@metric.MetricValue.ToString("N2")</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@(metric.MetricUnit ?? "count")</small>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(metric.ModelName))
+                                                {
+                                                    <span class="badge bg-dark">@metric.ModelName</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(metric.Provider))
+                                                {
+                                                    <span class="badge @(metric.Provider == "openai" ? "bg-success" : "bg-primary")">@metric.Provider</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (metric.CampaignId.HasValue)
+                                                {
+                                                    <a href="/Campaign/Details/@metric.CampaignId" class="btn btn-sm btn-outline-primary">
+                                                        #@metric.CampaignId
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(metric.UserId))
+                                                {
+                                                    <small class="text-muted">@metric.UserId.Substring(0, Math.Min(8, metric.UserId.Length))...</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(metric.Metadata))
+                                                {
+                                                    <button class="btn btn-sm btn-outline-info" onclick="showMetadata('@metric.Id', '@Html.Raw(metric.Metadata.Replace("\"", "&quot;"))')">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <p>Aucune métrique trouvée pour les critères sélectionnés.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Évolution des métriques</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="metricsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Données pour le graphique
+        const metricsData = @Html.Raw(Json.Serialize(Model.Select(m => new { 
+            timestamp = m.Timestamp.ToString("yyyy-MM-dd HH:mm"), 
+            value = m.MetricValue, 
+            metric = m.MetricName,
+            unit = m.MetricUnit 
+        })));
+
+        // Grouper par métrique
+        const groupedData = {};
+        metricsData.forEach(item => {
+            if (!groupedData[item.metric]) {
+                groupedData[item.metric] = [];
+            }
+            groupedData[item.metric].push(item);
+        });
+
+        // Créer le graphique
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        const datasets = Object.keys(groupedData).map((metric, index) => {
+            const colors = ['rgb(75, 192, 192)', 'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)'];
+            return {
+                label: metric,
+                data: groupedData[metric].map(item => item.value),
+                borderColor: colors[index % colors.length],
+                backgroundColor: colors[index % colors.length].replace('rgb', 'rgba').replace(')', ', 0.2)'),
+                tension: 0.1
+            };
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: metricsData.map(item => item.timestamp),
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    </script>
+} 

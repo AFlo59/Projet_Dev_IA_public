@@ -1,0 +1,198 @@
+@model DnDGameMaster.WebApp.ViewModels.CampaignIndexViewModel
+
+@{
+    ViewData["Title"] = "Campaigns";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-book-open me-2"></i>@ViewData["Title"]</h1>
+        <p class="text-muted">Manage your D&D campaigns or join existing ones</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New Campaign
+        </a>
+    </div>
+</div>
+
+@if (Model.UserCampaigns.Any())
+{
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h3 mb-0"><i class="fas fa-dice-d20 me-2"></i>My Campaigns</h2>
+            <a href="#" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-sort me-1"></i>Sort
+            </a>
+        </div>
+        
+        <div class="row">
+            @foreach (var campaign in Model.UserCampaigns)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 campaign-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">@campaign.Name</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="campaign-info mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="campaign-setting">
+                                        <i class="fas fa-map me-1"></i>@(campaign.Settings ?? "Custom")
+                                    </span>
+                                    <span class="campaign-status">
+                                        @campaign.Status
+                                    </span>
+                                </div>
+                                <p class="card-text">@(campaign.Description?.Substring(0, Math.Min(120, campaign.Description?.Length ?? 0)) ?? "No description")@(campaign.Description?.Length > 120 ? "..." : "")</p>
+                            </div>
+                            <div class="campaign-stats d-flex justify-content-between text-muted small mb-3">
+                                <span><i class="fas fa-users me-1"></i>@campaign.MaxPlayers</span>
+                                <span><i class="fas fa-calendar-alt me-1"></i>Created: @campaign.CreatedAt.ToString("MMM d")</span>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-info-circle me-1"></i>Details
+                            </a>
+                            @if (campaign.ContentGenerationStatus == "ImagesCompleted")
+                            {
+                                <a asp-action="Play" asp-route-id="@campaign.Id" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-play me-1"></i>Play
+                                </a>
+                            }
+                            else if (campaign.ContentGenerationStatus == "NotStarted")
+                            {
+                                <button class="btn btn-sm btn-success" disabled>
+                                    <i class="fas fa-magic me-1"></i>Generate Content
+                                </button>
+                            }
+                            else if (campaign.ContentGenerationStatus == "InProgress" || campaign.ContentGenerationStatus == "Completed" || campaign.ContentGenerationStatus == "ImagesInProgress")
+                            {
+                                <button class="btn btn-sm btn-warning" disabled>
+                                    <i class="fas fa-spinner fa-spin me-1"></i>Generating Content & Images...
+                                </button>
+                            }
+                            else if (campaign.ContentGenerationStatus == "Failed")
+                            {
+                                <button class="btn btn-sm btn-danger" disabled>
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Retry Generation
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <div class="alert alert-info mb-5">
+        <div class="d-flex">
+            <div class="me-3">
+                <i class="fas fa-info-circle fa-2x"></i>
+            </div>
+            <div>
+                <h4>No Campaigns Yet</h4>
+                <p>You are not part of any campaigns yet. You can create a new campaign or join an existing one below.</p>
+                <a asp-action="Create" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>Create Campaign
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.PublicCampaigns.Any())
+{
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h3 mb-0"><i class="fas fa-globe me-2"></i>Public Campaigns</h2>
+            <div>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" placeholder="Search campaigns" id="campaignSearch">
+                    <button class="btn btn-sm btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row" id="publicCampaignsContainer">
+            @foreach (var campaign in Model.PublicCampaigns)
+            {
+                <div class="col-md-6 col-lg-4 mb-4 campaign-item">
+                    <div class="card h-100 campaign-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">@campaign.Name</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="campaign-info mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="campaign-setting">
+                                        <i class="fas fa-map me-1"></i>@(campaign.Settings ?? "Custom")
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-user me-1"></i>@(campaign.Owner?.FirstName ?? string.Empty) @(campaign.Owner?.LastName ?? string.Empty)
+                                    </span>
+                                </div>
+                                <p class="card-text">@(campaign.Description?.Substring(0, Math.Min(100, campaign.Description?.Length ?? 0)) ?? "No description")@(campaign.Description?.Length > 100 ? "..." : "")</p>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-grid">
+                                <a asp-action="Join" asp-route-id="@campaign.Id" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Join Campaign
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <div class="alert alert-info">
+        <div class="d-flex">
+            <div class="me-3">
+                <i class="fas fa-info-circle fa-2x"></i>
+            </div>
+            <div>
+                <h4>No Public Campaigns</h4>
+                <p>There are no public campaigns available to join at this time.</p>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Simple campaign search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('campaignSearch');
+            if (!searchInput) return;
+            
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                const campaigns = document.querySelectorAll('#publicCampaignsContainer .campaign-item');
+                
+                campaigns.forEach(campaign => {
+                    const title = campaign.querySelector('.card-title').textContent.toLowerCase();
+                    const setting = campaign.querySelector('.campaign-setting').textContent.toLowerCase();
+                    const description = campaign.querySelector('.card-text').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || 
+                        setting.includes(searchTerm) || 
+                        description.includes(searchTerm)) {
+                        campaign.style.display = '';
+                    } else {
+                        campaign.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+} 

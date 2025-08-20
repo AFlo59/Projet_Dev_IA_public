@@ -1,0 +1,294 @@
+@model DnDGameMaster.WebApp.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard Monitoring - Administration";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-tachometer-alt text-primary"></i>
+                Dashboard Monitoring IA
+            </h1>
+        </div>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Requêtes IA (24h)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalRequests24h</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Taux de succès (24h)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.SuccessRate24h.ToString("F1")%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Temps de réponse moyen
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.AverageResponseTime.ToString("F0")ms</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Coût total (24h)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">$@Model.TotalCost24h.ToString("F2")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes actives -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Alertes actives</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.ActiveAlerts.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Niveau</th>
+                                        <th>Type</th>
+                                        <th>Message</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var alert in Model.ActiveAlerts.Take(5))
+                                    {
+                                        <tr class="@(alert.AlertLevel == "ERROR" ? "table-danger" : "table-warning")">
+                                            <td>@alert.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>
+                                                <span class="badge badge-@(alert.AlertLevel.ToLower())">
+                                                    @alert.AlertLevel
+                                                </span>
+                                            </td>
+                                            <td>@alert.AlertType</td>
+                                            <td>@alert.AlertMessage</td>
+                                            <td>
+                                                <a href="@Url.Action("Alerts", "Admin")" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-eye"></i> Voir
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (Model.ActiveAlerts.Count() > 5)
+                        {
+                            <div class="text-center mt-3">
+                                <a href="@Url.Action("Alerts", "Admin")" class="btn btn-primary">
+                                    Voir toutes les alertes (@Model.ActiveAlerts.Count())
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <p>Aucune alerte active</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Évolution des requêtes (7 jours)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="requestsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Répartition par modèle</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="modelsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance des modèles -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Performance des modèles</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.ModelPerformance.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Modèle</th>
+                                        <th>Provider</th>
+                                        <th>Temps moyen (ms)</th>
+                                        <th>Taux de succès</th>
+                                        <th>Requêtes</th>
+                                        <th>Erreurs</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var perf in Model.ModelPerformance)
+                                    {
+                                        <tr>
+                                            <td>@perf.ModelName</td>
+                                            <td>@perf.Provider</td>
+                                            <td>@perf.AverageResponseTime.ToString("F0")</td>
+                                            <td>
+                                                <span class="badge badge-@(perf.SuccessRate >= 95 ? "success" : perf.SuccessRate >= 80 ? "warning" : "danger")">
+                                                    @perf.SuccessRate.ToString("F1")%
+                                                </span>
+                                            </td>
+                                            <td>@perf.TotalRequests</td>
+                                            <td>@perf.TotalErrors</td>
+                                            <td>@perf.Date.ToString("dd/MM/yyyy")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                            <p>Aucune donnée de performance disponible</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Données pour les graphiques
+        const requestsData = @Html.Raw(Json.Serialize(Model.RequestsData));
+        const modelsData = @Html.Raw(Json.Serialize(Model.ModelsData));
+
+        // Graphique des requêtes
+        const requestsCtx = document.getElementById('requestsChart').getContext('2d');
+        new Chart(requestsCtx, {
+            type: 'line',
+            data: {
+                labels: requestsData.map(d => d.date),
+                datasets: [{
+                    label: 'Requêtes',
+                    data: requestsData.map(d => d.count),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Graphique des modèles
+        const modelsCtx = document.getElementById('modelsChart').getContext('2d');
+        new Chart(modelsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: modelsData.map(d => d.model),
+                datasets: [{
+                    data: modelsData.map(d => d.count),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+} 

@@ -1,0 +1,11 @@
+# Ce fichier maintient le dossier data/ dans Git
+# 
+# Usage: Volume Docker pour datareference_etl_bronze
+# Mapping: ./data:/app/data
+#
+# Le dossier est utilisé pour :
+# - Import de fichiers JSON locaux vers la base Bronze
+# - Point de montage Docker Compose
+# 
+# ⚠️ Ne commitez JAMAIS de vrais fichiers de données ici !
+# Seul ce .gitkeep doit être versionné.

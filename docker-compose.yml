@@ -1,0 +1,336 @@
+services:
+  # DataReference - Bronze Database
+  datareference_bronze_postgres:
+    image: postgres:14
+    container_name: datareference_bronze_postgres
+    environment:
+      POSTGRES_USER: ${DB_ADMIN_USER}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      POSTGRES_DB: ${BRONZE_DB_NAME:-bronze_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_INITDB_WALDIR: "/var/lib/postgresql/wal"
+    volumes:
+      - bronze_db_data:/var/lib/postgresql/data
+      - bronze_db_wal:/var/lib/postgresql/wal
+    ports:
+      - "${BRONZE_DB_EXTERNAL_PORT:-5435}:5432"
+    networks:
+      - dnd_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER} -d ${BRONZE_DB_NAME:-bronze_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c max_connections=50
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=8MB
+      -c work_mem=16MB
+      -c min_wal_size=80MB
+      -c max_wal_size=1GB
+
+  # DataReference - Silver Database
+  datareference_silver_postgres:
+    image: postgres:14
+    container_name: datareference_silver_postgres
+    environment:
+      POSTGRES_USER: ${DB_ADMIN_USER}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      POSTGRES_DB: ${SILVER_DB_NAME:-silver_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_INITDB_WALDIR: "/var/lib/postgresql/wal"
+      DB_READ_USER: ${DB_READ_USER}
+      DB_READ_PASSWORD: ${DB_READ_PASSWORD}
+    volumes:
+      - silver_db_data:/var/lib/postgresql/data
+      - silver_db_wal:/var/lib/postgresql/wal
+      - ./datareference/init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "${SILVER_DB_EXTERNAL_PORT:-5436}:5432"
+    networks:
+      - dnd_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER} -d ${SILVER_DB_NAME:-silver_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c max_connections=50
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=8MB
+      -c work_mem=16MB
+      -c min_wal_size=80MB
+      -c max_wal_size=1GB
+
+  # Unified WebApp Database
+  webapp_postgres:
+    image: postgres:14
+    container_name: webapp_postgres
+    environment:
+      POSTGRES_USER: ${DB_ADMIN_USER}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      POSTGRES_DB: ${APP_DB_NAME:-app_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_INITDB_WALDIR: "/var/lib/postgresql/wal"
+      GAME_DB_USER: ${GAME_DB_USER}
+      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD}
+    volumes:
+      - app_db_data:/var/lib/postgresql/data
+      - app_db_wal:/var/lib/postgresql/wal
+      - ./webapp/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${APP_DB_EXTERNAL_PORT:-5437}:5432"
+    networks:
+      - dnd_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER} -d ${APP_DB_NAME:-app_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c max_connections=50
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=8MB
+      -c work_mem=16MB
+      -c min_wal_size=80MB
+      -c max_wal_size=1GB
+
+  # DataReference - ETL Service for JSON import to Bronze DB
+  datareference_etl_bronze:
+    build:
+      context: ./datareference
+      dockerfile: Dockerfile.etl_bronze
+    container_name: datareference_etl_bronze
+    environment:
+      BRONZE_PG_HOST: datareference_bronze_postgres
+      BRONZE_PG_PORT: 5432
+      BRONZE_DB_NAME: ${BRONZE_DB_NAME:-bronze_db}
+      POSTGRES_USER: ${DB_ADMIN_USER}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_READ_USER: ${DB_READ_USER}
+      DB_READ_PASSWORD: ${DB_READ_PASSWORD}
+      PGDATABASE: ${BRONZE_DB_NAME:-bronze_db}
+      PGUSER: ${DB_ADMIN_USER}
+      PGPASSWORD: ${DB_ADMIN_PASSWORD}
+      PGHOST: datareference_bronze_postgres
+      PGPORT: 5432
+      AZURE_BLOB_STORAGE_CONNECTION_STRING: ${AZURE_BLOB_CONNECTION_STRING}
+      AZURE_BLOB_JSON_CONTAINER: ${AZURE_BLOB_CONTAINER:-jsons}
+      AZURE_JSON_PATH: ${JSON_BLOB_PATH:-data/}
+      MAX_PARALLEL_IMPORTS: 5
+      BATCH_SIZE: 50
+    volumes:
+      - ./data:/app/data
+    networks:
+      - dnd_network
+    depends_on:
+      datareference_bronze_postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    # 🔒 Pas de restart automatique - le script se charge d'éviter les doublons
+    restart: "no"
+
+  # DataReference - ETL Service for Bronze to Silver transformation
+  datareference_etl_silver:
+    build:
+      context: ./datareference
+      dockerfile: Dockerfile.etl_silver
+    container_name: datareference_etl_silver
+    environment:
+      PG_HOST: datareference_bronze_postgres
+      PG_PORT: 5432
+      BRONZE_DB_NAME: ${BRONZE_DB_NAME:-bronze_db}
+      BRONZE_DB_HOST: datareference_bronze_postgres
+      BRONZE_DB_PORT: 5432
+      SILVER_PG_HOST: datareference_silver_postgres
+      SILVER_PG_PORT: 5432
+      SILVER_DB_NAME: ${SILVER_DB_NAME:-silver_db}
+      SILVER_DB_HOST: datareference_silver_postgres
+      SILVER_DB_PORT: 5432
+      POSTGRES_USER: ${DB_ADMIN_USER}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_READ_USER: ${DB_READ_USER}
+      DB_READ_PASSWORD: ${DB_READ_PASSWORD}
+      PGDATABASE: ${BRONZE_DB_NAME:-bronze_db}
+      PGUSER: ${DB_ADMIN_USER}
+      PGPASSWORD: ${DB_ADMIN_PASSWORD}
+      PGHOST: datareference_bronze_postgres
+      PGPORT: 5432
+    networks:
+      - dnd_network
+    depends_on:
+      datareference_bronze_postgres:
+        condition: service_healthy
+      datareference_silver_postgres:
+        condition: service_healthy
+      datareference_etl_bronze:
+        condition: service_completed_successfully
+    # 🔒 Pas de restart automatique - le script se charge d'éviter les doublons  
+    restart: "no"
+
+  # DataReference - API Service for exposing reference data
+  datareference_api:
+    build:
+      context: ./datareference
+      dockerfile: Dockerfile.api
+    container_name: datareference_api
+    environment:
+      SILVER_PG_HOST: datareference_silver_postgres
+      SILVER_PG_PORT: 5432
+      SILVER_DB_HOST: datareference_silver_postgres
+      SILVER_DB_PORT: 5432
+      SILVER_DB_NAME: ${SILVER_DB_NAME:-silver_db}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_READ_USER: ${DB_READ_USER}
+      DB_READ_PASSWORD: ${DB_READ_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    ports:
+      - "${DATAREFERENCE_API_EXTERNAL_PORT:-5000}:5000"
+    networks:
+      - dnd_network
+    depends_on:
+      datareference_silver_postgres:
+        condition: service_healthy
+      datareference_etl_silver:
+        condition: service_completed_successfully
+
+  # LLMGameMaster Service
+  llm_gamemaster:
+    build:
+      context: ./llmgamemaster
+      dockerfile: Dockerfile
+    container_name: llm_gamemaster
+    environment:
+      # Silver database connection for reference data
+      SILVER_DB_HOST: datareference_silver_postgres
+      SILVER_DB_PORT: 5432
+      SILVER_DB_NAME: ${SILVER_DB_NAME:-silver_db}
+      DB_READ_USER: ${DB_READ_USER}
+      DB_READ_PASSWORD: ${DB_READ_PASSWORD}
+      
+      # App database connection for game data
+      APP_DB_HOST: webapp_postgres
+      APP_DB_PORT: 5432
+      APP_DB_NAME: ${APP_DB_NAME:-app_db}
+      GAME_DB_USER: ${GAME_DB_USER}
+      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD}
+      
+      # Auth database connection for JWT authentication
+      AUTH_DB_USER: ${AUTH_DB_USER}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      
+      # JWT Configuration
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      
+      # LLM Provider Configuration (configurable via .env)
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      
+      # LLM configurations
+      OPEN_AI_KEY: ${OPEN_AI_KEY}
+      OPEN_AI_MODEL: ${OPEN_AI_MODEL:-gpt-4o}
+      OPEN_AI_MAX_TOKEN: ${OPEN_AI_MAX_TOKEN:-20000}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20240620}
+      ANTHROPIC_MAX_TOKEN: ${ANTHROPIC_MAX_TOKEN:-20000}
+      
+      # Configuration pour le stockage d'images
+      IMAGE_STORAGE_PATH: static
+      BASE_IMAGE_URL: ${BASE_IMAGE_URL:-http://localhost:5001}
+    volumes:
+      # Volume pour persister les images statiques
+      - ./llmgamemaster/static:/app/static
+      # Partager les images avec webapp
+      - shared_images:/app/static/images
+    ports:
+      - "${LLM_GAMEMASTER_EXTERNAL_PORT:-5001}:5001"
+    networks:
+      - dnd_network
+    depends_on:
+      datareference_api:
+        condition: service_started
+      webapp_postgres:
+        condition: service_healthy
+
+  # WebApp Service
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    container_name: webapp
+    volumes:
+      # Accès aux images générées par llmgamemaster
+      - shared_images:/app/wwwroot/images
+    environment:
+      APP_DB_HOST: webapp_postgres
+      APP_DB_PORT: 5432
+      APP_DB_NAME: ${APP_DB_NAME:-app_db}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      GAME_DB_USER: ${GAME_DB_USER}
+      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD}
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      BREVO_SECRET_KEY: ${BREVO_SECRET_KEY}
+      BREVO_FROM_EMAIL: ${BREVO_FROM_EMAIL}
+      BREVO_FROM_NAME: ${BREVO_FROM_NAME}
+      MAILJET_API_KEY: ${MAILJET_API_KEY}
+      MAILJET_SECRET_KEY: ${MAILJET_SECRET_KEY}
+      MAILJET_FROM_EMAIL: ${MAILJET_FROM_EMAIL}
+      MAILJET_FROM_NAME: ${MAILJET_FROM_NAME}
+      DATA_REFERENCE_API_URL: http://datareference_api:5000
+      LLM_GAMEMASTER_API_URL: http://llm_gamemaster:5001
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      LLM_JWT_SECRET_KEY: ${LLM_JWT_SECRET_KEY}
+      LLM_JWT_EXPIRATION_HOURS: ${LLM_JWT_EXPIRATION_HOURS:-24}
+      LLM_ENABLE_AUTH: ${LLM_ENABLE_AUTH:-true}
+      ASPNETCORE_URLS: http://+:80
+    ports:
+      - "${WEBAPP_HTTP_PORT:-80}:80"
+    networks:
+      - dnd_network
+    depends_on:
+      webapp_postgres:
+        condition: service_healthy
+      llm_gamemaster:
+        condition: service_started
+
+networks:
+  dnd_network:
+    driver: bridge
+
+volumes:
+  bronze_db_data:
+    driver: local
+  silver_db_data:
+    driver: local
+  app_db_data:
+    driver: local
+  bronze_db_wal:
+    driver: local
+  silver_db_wal:
+    driver: local
+  app_db_wal:
+    driver: local
+  shared_images:
+    driver: local 

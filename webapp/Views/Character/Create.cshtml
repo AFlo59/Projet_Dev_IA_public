@@ -1,0 +1,566 @@
+@model DnDGameMaster.WebApp.Controllers.CharacterCreateViewModel
+
+@{
+    ViewData["Title"] = "Create New Character";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-user-shield me-2"></i>Create Character for Campaign: @Model.CampaignName</h1>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="CampaignId" />
+            <input type="hidden" asp-for="CampaignName" />
+            <input type="hidden" asp-for="UseRandomStats" id="useRandomStats" />
+            <input type="hidden" asp-for="Level" value="1" />
+            <input type="hidden" asp-for="PortraitUrl" id="portraitUrl" />
+            
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Name" class="form-control" placeholder="Character Name" />
+                        <label asp-for="Name">Character Name</label>
+                    </div>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                        <div class="col-md-6">
+                    <div class="form-floating">
+                        <select asp-for="Race" class="form-select">
+                            @foreach (var race in Model.AvailableRaces)
+                            {
+                                <option value="@race">@race</option>
+                            }
+                        </select>
+                        <label asp-for="Race">Race</label>
+                    </div>
+                    <span asp-validation-for="Race" class="text-danger"></span>
+                </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                    <div class="form-floating">
+                        <select asp-for="Class" class="form-select">
+                            @foreach (var className in Model.AvailableClasses)
+                            {
+                                <option value="@className">@className</option>
+                            }
+                        </select>
+                        <label asp-for="Class">Class</label>
+                    </div>
+                    <span asp-validation-for="Class" class="text-danger"></span>
+                </div>
+                        <div class="col-md-6">
+                    <div class="form-floating">
+                        <select asp-for="Background" class="form-select">
+                            @foreach (var background in Model.AvailableBackgrounds)
+                            {
+                                <option value="@background">@background</option>
+                            }
+                        </select>
+                        <label asp-for="Background">Background</label>
+                    </div>
+                    <span asp-validation-for="Background" class="text-danger"></span>
+                </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                    <div class="form-floating">
+                        <select asp-for="Alignment" class="form-select">
+                            <option value="Lawful Good">Lawful Good</option>
+                            <option value="Neutral Good">Neutral Good</option>
+                            <option value="Chaotic Good">Chaotic Good</option>
+                            <option value="Lawful Neutral">Lawful Neutral</option>
+                            <option value="True Neutral">True Neutral</option>
+                            <option value="Chaotic Neutral">Chaotic Neutral</option>
+                            <option value="Lawful Evil">Lawful Evil</option>
+                            <option value="Neutral Evil">Neutral Evil</option>
+                            <option value="Chaotic Evil">Chaotic Evil</option>
+                        </select>
+                        <label asp-for="Alignment">Alignment</label>
+                    </div>
+                    <span asp-validation-for="Alignment" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-floating w-100">
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                                <label asp-for="Gender">Gender</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="character-portrait-container">
+                        <div class="character-portrait">
+                            <img src="https://www.dndbeyond.com/avatars/default-avatar.png" id="characterPortrait" class="img-fluid rounded" alt="Character Portrait" />
+                        </div>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">Character portrait will be generated automatically</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Ability Scores</h4>
+                    <div>
+                        <span class="me-3" id="pointsDisplay">Points Remaining: <span id="pointsRemaining">27</span>/27</span>
+                        <button type="button" id="randomizeStats" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-dice me-1"></i>Smart Roll (27 pts)
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <small><strong>Point Buy System:</strong> You have 27 points to spend. Higher scores cost more points (8=0, 9=1, 10=2, 11=3, 12=4, 13=5, 14=7, 15=9 pts). Minimum score is 8. Smart Roll distributes points randomly but efficiently.</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="stat-block">
+                                <label>Strength (STR)</label>
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Strength" data-action="decrease">-</button>
+                                    <input asp-for="Strength" class="form-control stat-input" type="number" min="8" max="18" />
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Strength" data-action="increase">+</button>
+                                </div>
+                                <div class="stat-modifier" id="strMod">+0</div>
+                                <span asp-validation-for="Strength" class="text-danger"></span>
+                            </div>
+                </div>
+                <div class="col-md-2">
+                            <div class="stat-block">
+                                <label>Dexterity (DEX)</label>
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Dexterity" data-action="decrease">-</button>
+                                    <input asp-for="Dexterity" class="form-control stat-input" type="number" min="8" max="18" />
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Dexterity" data-action="increase">+</button>
+                    </div>
+                                <div class="stat-modifier" id="dexMod">+0</div>
+                    <span asp-validation-for="Dexterity" class="text-danger"></span>
+                            </div>
+                </div>
+                <div class="col-md-2">
+                            <div class="stat-block">
+                                <label>Constitution (CON)</label>
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Constitution" data-action="decrease">-</button>
+                                    <input asp-for="Constitution" class="form-control stat-input" type="number" min="8" max="18" />
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Constitution" data-action="increase">+</button>
+                    </div>
+                                <div class="stat-modifier" id="conMod">+0</div>
+                    <span asp-validation-for="Constitution" class="text-danger"></span>
+                            </div>
+                </div>
+                <div class="col-md-2">
+                            <div class="stat-block">
+                                <label>Intelligence (INT)</label>
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Intelligence" data-action="decrease">-</button>
+                                    <input asp-for="Intelligence" class="form-control stat-input" type="number" min="8" max="18" />
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Intelligence" data-action="increase">+</button>
+                    </div>
+                                <div class="stat-modifier" id="intMod">+0</div>
+                    <span asp-validation-for="Intelligence" class="text-danger"></span>
+                            </div>
+                </div>
+                <div class="col-md-2">
+                            <div class="stat-block">
+                                <label>Wisdom (WIS)</label>
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Wisdom" data-action="decrease">-</button>
+                                    <input asp-for="Wisdom" class="form-control stat-input" type="number" min="8" max="18" />
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Wisdom" data-action="increase">+</button>
+                    </div>
+                                <div class="stat-modifier" id="wisMod">+0</div>
+                    <span asp-validation-for="Wisdom" class="text-danger"></span>
+                            </div>
+                </div>
+                <div class="col-md-2">
+                            <div class="stat-block">
+                                <label>Charisma (CHA)</label>
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Charisma" data-action="decrease">-</button>
+                                    <input asp-for="Charisma" class="form-control stat-input" type="number" min="8" max="18" />
+                                    <button type="button" class="btn btn-outline-secondary btn-sm stat-btn" data-stat="Charisma" data-action="increase">+</button>
+                                </div>
+                                <div class="stat-modifier" id="chaMod">+0</div>
+                                <span asp-validation-for="Charisma" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="form-floating">
+                    <textarea asp-for="Description" class="form-control" style="height: 120px;" placeholder="Character Description"></textarea>
+                    <label asp-for="Description">Character Description</label>
+                </div>
+                <span asp-validation-for="Description" class="text-danger"></span>
+                <div class="form-text">Describe your character's appearance, personality, and backstory. If left empty, a description will be generated automatically.</div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="form-floating">
+                    <textarea asp-for="Equipment" class="form-control" style="height: 100px;" placeholder="Equipment"></textarea>
+                    <label asp-for="Equipment">Equipment</label>
+                </div>
+                <span asp-validation-for="Equipment" class="text-danger"></span>
+                <div class="form-text">List your character's weapons, armor, and other items</div>
+            </div>
+            
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-save me-2"></i>Create Character
+                </button>
+                <a asp-controller="Campaign" asp-action="Details" asp-route-id="@Model.CampaignId" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Campaign
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3><i class="fas fa-info-circle me-2"></i>Character Creation Tips</h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-brain fa-3x mb-3 text-primary"></i>
+                    <h4>Develop Personality</h4>
+                    <p>Give your character goals, flaws, and motivations that drive their actions and decisions.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-book-open fa-3x mb-3 text-primary"></i>
+                    <h4>Create Backstory</h4>
+                    <p>Craft a compelling history that explains how your character acquired their skills and worldview.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-dice-d20 fa-3x mb-3 text-primary"></i>
+                    <h4>Optimize Abilities</h4>
+                    <p>Assign your highest ability scores to attributes that are most important for your character's class.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .character-portrait-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+    
+    .character-portrait {
+        width: 200px;
+        height: 200px;
+        overflow: hidden;
+        border: 3px solid #343a40;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+    }
+    
+    .character-portrait img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .stat-block {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    .stat-input {
+        width: 60px;
+        text-align: center;
+        margin: 0 5px;
+        /* Remove browser default number input spinners/steppers */
+        -moz-appearance: textfield;
+    }
+    
+    /* Remove Chrome, Safari, Edge, Opera spinners */
+    .stat-input::-webkit-outer-spin-button,
+    .stat-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    .stat-modifier {
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    
+    .stat-btn {
+        padding: 0.25rem 0.5rem;
+        min-width: 32px;
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Point buy system costs
+        const pointCosts = {
+            8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9, 16: 11, 17: 14, 18: 17
+        };
+        
+        // Stats and their corresponding modifier elements
+        const stats = [
+            { name: 'Strength', element: document.getElementById('Strength'), modElement: document.getElementById('strMod') },
+            { name: 'Dexterity', element: document.getElementById('Dexterity'), modElement: document.getElementById('dexMod') },
+            { name: 'Constitution', element: document.getElementById('Constitution'), modElement: document.getElementById('conMod') },
+            { name: 'Intelligence', element: document.getElementById('Intelligence'), modElement: document.getElementById('intMod') },
+            { name: 'Wisdom', element: document.getElementById('Wisdom'), modElement: document.getElementById('wisMod') },
+            { name: 'Charisma', element: document.getElementById('Charisma'), modElement: document.getElementById('chaMod') }
+        ];
+        
+        // Calculate ability score modifier
+        function calculateModifier(score) {
+            return Math.floor((score - 10) / 2);
+        }
+        
+        // Update displayed modifier
+        function updateModifier(stat) {
+            const score = parseInt(stat.element.value);
+            const modifier = calculateModifier(score);
+            stat.modElement.textContent = (modifier >= 0 ? '+' : '') + modifier;
+        }
+        
+        // Calculate points used
+        function calculatePointsUsed() {
+            let totalPoints = 0;
+            
+            stats.forEach(stat => {
+                const score = parseInt(stat.element.value);
+                totalPoints += pointCosts[score] || 0;
+            });
+            
+            return totalPoints;
+        }
+        
+        // Update points remaining display
+        function updatePointsRemaining() {
+            const pointsUsed = calculatePointsUsed();
+            const pointsRemaining = 27 - pointsUsed;
+            
+            document.getElementById('pointsRemaining').textContent = pointsRemaining;
+            
+            // Change color based on points remaining
+            const pointsDisplay = document.getElementById('pointsDisplay');
+            if (pointsRemaining < 0) {
+                pointsDisplay.classList.add('text-danger');
+                pointsDisplay.classList.remove('text-success');
+            } else {
+                pointsDisplay.classList.remove('text-danger');
+                pointsDisplay.classList.add('text-success');
+            }
+        }
+        
+        // Update all stat modifiers
+        function updateAllModifiers() {
+            stats.forEach(updateModifier);
+            updatePointsRemaining();
+        }
+        
+        // Handle stat increase/decrease button clicks
+        document.querySelectorAll('.stat-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const statName = this.dataset.stat;
+                const action = this.dataset.action;
+                const stat = stats.find(s => s.name === statName);
+                
+                if (!stat) return;
+                
+                let value = parseInt(stat.element.value);
+                
+                if (action === 'increase' && value < 18) {
+                    stat.element.value = value + 1;
+                } else if (action === 'decrease' && value > 8) {
+                    stat.element.value = value - 1;
+                }
+                
+                updateModifier(stat);
+                updatePointsRemaining();
+            });
+        });
+        
+        // Handle direct input on stat fields
+        stats.forEach(stat => {
+            stat.element.addEventListener('change', function() {
+                let value = parseInt(this.value);
+                
+                // Clamp value between 8 and 18
+                if (value < 8) this.value = 8;
+                if (value > 18) this.value = 18;
+                
+                updateModifier(stat);
+                updatePointsRemaining();
+            });
+        });
+        
+        // Smart random stats distribution using point buy system
+        document.getElementById('randomizeStats').addEventListener('click', function() {
+            const button = this;
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rolling...';
+            button.disabled = true;
+            
+            // Set the hidden flag for using random stats
+            document.getElementById('useRandomStats').value = 'true';
+            
+            setTimeout(() => {
+                // Generate smart random stats that use exactly 27 points
+                const randomStats = generateSmartRandomStats();
+                
+                // Apply the generated stats
+                stats.forEach((stat, index) => {
+                    stat.element.value = randomStats[index];
+                    updateModifier(stat);
+                });
+                
+                // Update points display
+                updatePointsRemaining();
+                
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 500); // Small delay for visual feedback
+        });
+        
+        // Generate smart random stats that respect point buy constraints
+        function generateSmartRandomStats() {
+            const maxAttempts = 1000;
+            let attempt = 0;
+            
+            while (attempt < maxAttempts) {
+                // Start with base 8 for all stats (costs 0 points each)
+                let statValues = [8, 8, 8, 8, 8, 8];
+                let remainingPoints = 27;
+                
+                // Randomly distribute remaining points
+                while (remainingPoints > 0) {
+                    // Pick a random stat to increase
+                    const statIndex = Math.floor(Math.random() * 6);
+                    const currentValue = statValues[statIndex];
+                    
+                    // Don't go above 15 for random generation (keeps it reasonable)
+                    if (currentValue >= 15) continue;
+                    
+                    // Calculate cost to increase this stat by 1
+                    const costForIncrease = getCostForIncrease(currentValue);
+                    
+                    // If we can afford it, increase the stat
+                    if (costForIncrease <= remainingPoints) {
+                        statValues[statIndex]++;
+                        remainingPoints -= costForIncrease;
+                    } else {
+                        // If we can't afford any more increases, try to find cheaper options
+                        let foundCheapOption = false;
+                        for (let i = 0; i < 6; i++) {
+                            const cheapCost = getCostForIncrease(statValues[i]);
+                            if (cheapCost <= remainingPoints && statValues[i] < 15) {
+                                statValues[i]++;
+                                remainingPoints -= cheapCost;
+                                foundCheapOption = true;
+                                break;
+                            }
+                        }
+                        
+                        // If no cheap options available, break
+                        if (!foundCheapOption) break;
+                    }
+                }
+                
+                // Try to use all remaining points efficiently
+                while (remainingPoints > 0) {
+                    let foundMove = false;
+                    
+                    // Look for any stat we can increase with remaining points
+                    for (let i = 0; i < 6; i++) {
+                        if (statValues[i] < 15 && getCostForIncrease(statValues[i]) <= remainingPoints) {
+                            const cost = getCostForIncrease(statValues[i]);
+                            statValues[i]++;
+                            remainingPoints -= cost;
+                            foundMove = true;
+                            break;
+                        }
+                    }
+                    
+                    // If no moves possible, try to find moves with stats up to 18
+                    if (!foundMove) {
+                        for (let i = 0; i < 6; i++) {
+                            if (statValues[i] < 18 && getCostForIncrease(statValues[i]) <= remainingPoints) {
+                                const cost = getCostForIncrease(statValues[i]);
+                                statValues[i]++;
+                                remainingPoints -= cost;
+                                foundMove = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // If still no moves possible, break to avoid infinite loop
+                    if (!foundMove) break;
+                }
+                
+                // Accept this distribution if we used most points (within 1 point is acceptable)
+                if (remainingPoints <= 1) {
+                    return statValues;
+                }
+                
+                attempt++;
+            }
+            
+            // Fallback: return a balanced distribution if random generation fails
+            return [13, 14, 13, 12, 12, 13]; // Uses exactly 27 points
+        }
+        
+        // Calculate the cost to increase a stat from its current value to current+1
+        function getCostForIncrease(currentValue) {
+            if (currentValue >= 18) return Infinity; // Can't increase beyond 18
+            if (currentValue < 8) return 1; // This shouldn't happen, but just in case
+            
+            const nextValue = currentValue + 1;
+            const currentCost = pointCosts[currentValue] || 0;
+            const nextCost = pointCosts[nextValue] || 0;
+            
+            return nextCost - currentCost;
+        }
+        
+        // Show loading state but don't disable the button (creation is now instant)
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Show loading state briefly
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Character...';
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAllModifiers();
+        });
+    </script>
+} 

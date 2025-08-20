@@ -1,0 +1,101 @@
+# ===========================================================================
+# .gitattributes - Configuration Git pour sécurité
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SÉCURITÉ - EMPÊCHER LES COMMITS ACCIDENTELS
+# ---------------------------------------------------------------------------
+# Fichiers contenant des secrets - JAMAIS dans Git
+*.env filter=git-crypt diff=git-crypt
+*.key filter=git-crypt diff=git-crypt
+*.pem filter=git-crypt diff=git-crypt
+*.p12 filter=git-crypt diff=git-crypt
+*.pfx filter=git-crypt diff=git-crypt
+secrets.json filter=git-crypt diff=git-crypt
+credentials.json filter=git-crypt diff=git-crypt
+.pgpass filter=git-crypt diff=git-crypt
+api_keys.json filter=git-crypt diff=git-crypt
+
+# ---------------------------------------------------------------------------
+# TRAITEMENT DES FINS DE LIGNE
+# ---------------------------------------------------------------------------
+# Assurer la cohérence des fins de ligne
+* text=auto eol=lf
+
+# Fichiers Windows spécifiques
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Fichiers Unix spécifiques  
+*.sh text eol=lf
+
+# ---------------------------------------------------------------------------
+# FICHIERS BINAIRES
+# ---------------------------------------------------------------------------
+# Images - traiter comme binaire
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+
+# Documents
+*.pdf binary
+*.doc binary
+*.docx binary
+
+# Archives
+*.zip binary
+*.tar.gz binary
+*.rar binary
+
+# ---------------------------------------------------------------------------
+# FICHIERS DE CODE
+# ---------------------------------------------------------------------------
+# Python
+*.py text diff=python
+*.pyw text diff=python
+*.py3 text diff=python
+
+# C#
+*.cs text diff=csharp
+*.csx text diff=csharp
+*.vb text
+*.fs text
+*.fsx text
+*.fsi text
+
+# Web
+*.html text diff=html
+*.css text diff=css
+*.js text
+*.json text
+*.xml text
+*.yml text
+*.yaml text
+
+# Configuration
+*.config text
+*.conf text
+*.ini text
+
+# Markdown et documentation
+*.md text diff=markdown
+*.txt text
+*.rst text
+
+# ---------------------------------------------------------------------------
+# LINGUIST - Pour GitHub language detection
+# ---------------------------------------------------------------------------
+# Exclure les fichiers générés du comptage
+static/images/* linguist-generated=true
+wwwroot/images/* linguist-generated=true
+bin/* linguist-generated=true
+obj/* linguist-generated=true
+Migrations/* linguist-generated=true
+
+# Fichiers de documentation
+*.md linguist-documentation=true
+docs/* linguist-documentation=true

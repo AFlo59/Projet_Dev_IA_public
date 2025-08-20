@@ -1,0 +1,910 @@
+@model DnDGameMaster.WebApp.ViewModels.CampaignDetailsViewModel
+
+@{
+    ViewData["Title"] = "Campaign Details";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-0"><i class="fas fa-book-open me-2"></i>@Model.Campaign.Name</h1>
+            <p class="text-muted">@Model.Campaign.Settings</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (Model.IsOwner || Model.UserInCampaign)
+            {
+                if (Model.Campaign.ContentGenerationStatus == "ImagesCompleted")
+                {
+                    <a asp-action="Play" asp-route-id="@Model.Campaign.Id" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Play Campaign
+                    </a>
+                }
+                else if (Model.Campaign.ContentGenerationStatus == "NotStarted" && Model.IsOwner)
+                {
+                    @if (Model.Campaign.CharacterGenerationStatus == "Completed" || Model.Campaign.CharacterGenerationStatus == "NotStarted")
+                    {
+                        <button id="generateContentBtnMain" class="btn btn-success" data-campaign-id="@Model.Campaign.Id">
+                            <i class="fas fa-magic me-2"></i>Generate Campaign Content
+                        </button>
+                    }
+                    else if (Model.Campaign.CharacterGenerationStatus == "InProgress")
+                    {
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-user-plus fa-spin me-2"></i>Generating Characters...
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="fas fa-clock me-2"></i>Waiting for Characters
+                        </button>
+                    }
+                }
+                else if (Model.Campaign.ContentGenerationStatus == "InProgress" || Model.Campaign.ContentGenerationStatus == "Completed" || Model.Campaign.ContentGenerationStatus == "ImagesInProgress")
+                {
+                    <button class="btn btn-warning" disabled>
+                        <i class="fas fa-spinner fa-spin me-2"></i>Generating Content & Images...
+                    </button>
+                }
+                else if (Model.Campaign.ContentGenerationStatus == "Failed")
+                {
+                    <button id="retryGenerateContentBtnMain" class="btn btn-danger" data-campaign-id="@Model.Campaign.Id">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Retry Generation
+                    </button>
+                }
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+    
+    @if (Model.Campaign.ContentGenerationStatus == "InProgress")
+    {
+        <div class="alert alert-info">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                </div>
+                <div>
+                    <h4>Generating Campaign Content</h4>
+                    <p>Creating locations, NPCs, and quests for your campaign. This may take a few minutes.</p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    
+    @if (Model.Campaign.ContentGenerationStatus == "Failed")
+    {
+        <div class="alert alert-danger">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                </div>
+                <div>
+                    <h4>Content Generation Failed</h4>
+                    <p>There was an error generating campaign content. You can retry the generation.</p>
+                    @if (!string.IsNullOrEmpty(Model.Campaign.ContentGenerationError))
+                    {
+                        <p class="small text-muted">Error: @Model.Campaign.ContentGenerationError</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-info-circle me-2"></i>Campaign Details</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h4>Description</h4>
+                    <p>@Model.Campaign.Description</p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <h5>Setting</h5>
+                        <p>@(Model.Campaign.Settings ?? "Custom")</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Starting Level</h5>
+                        <p>@Model.Campaign.StartingLevel</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Max Players</h5>
+                        <p>@Model.Campaign.MaxPlayers</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5>Status</h5>
+                        <p>@Model.Campaign.Status</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Created</h5>
+                        <p>@Model.Campaign.CreatedAt.ToString("MMM d, yyyy")</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Visibility</h5>
+                        <p>@(Model.Campaign.IsPublic ? "Public" : "Private")</p>
+                    </div>
+                </div>
+                
+                @if (Model.IsOwner)
+                {
+                    <div class="mt-4">
+                        <a asp-action="Edit" asp-route-id="@Model.Campaign.Id" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Campaign
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Campaign.Id" class="btn btn-outline-danger ms-2">
+                            <i class="fas fa-trash-alt me-2"></i>Delete Campaign
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0"><i class="fas fa-user-shield me-2"></i>Characters</h3>
+                @if (Model.UserInCampaign && Model.Characters.Count < Model.Campaign.MaxPlayers)
+                {
+                    <a asp-controller="Character" asp-action="Create" asp-route-campaignId="@Model.Campaign.Id" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Character
+                    </a>
+                }
+                else if (Model.UserInCampaign && Model.Characters.Count >= Model.Campaign.MaxPlayers)
+                {
+                    <span class="text-muted small">
+                        <i class="fas fa-users me-1"></i>Max players reached (@Model.Campaign.MaxPlayers)
+                    </span>
+                }
+            </div>
+            <div class="card-body">
+                @if (Model.Characters.Any())
+                {
+                    <div class="row">
+                        @foreach (var character in Model.Characters)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <div class="me-3">
+                                                @if (!string.IsNullOrEmpty(character.Character?.PortraitUrl))
+                                                {
+                                                    <img src="@character.Character.PortraitUrl" class="character-portrait-thumb" alt="@character.Character.Name portrait" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="character-portrait-placeholder-thumb d-flex align-items-center justify-content-center bg-light">
+                                                        <i class="fas fa-user-circle text-muted"></i>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="card-title mb-2">@character.Character?.Name</h5>
+                                                <p class="card-text mb-2">
+                                                    <span class="badge bg-primary">@character.Character?.Race</span>
+                                                    <span class="badge bg-secondary">@character.Character?.Class</span>
+                                                    <span class="badge bg-info">Level @character.Character?.Level</span>
+                                                </p>
+                                                <p class="card-text small mb-0">
+                                                    @(character.Character?.Description?.Substring(0, Math.Min(100, character.Character?.Description?.Length ?? 0)) ?? "No description")@(character.Character?.Description?.Length > 100 ? "..." : "")
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <a asp-controller="Character" asp-action="Details" asp-route-id="@character.Character?.Id" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-info-circle me-1"></i>Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4>No Characters Yet</h4>
+                                <p>There are no characters in this campaign yet.</p>
+                                @if (Model.UserInCampaign && Model.Characters.Count < Model.Campaign.MaxPlayers)
+                                {
+                                    <a asp-controller="Character" asp-action="Create" asp-route-campaignId="@Model.Campaign.Id" class="btn btn-primary mt-2">
+                                        <i class="fas fa-plus me-2"></i>Create Character
+                                    </a>
+                                }
+                                else if (Model.UserInCampaign && Model.Characters.Count >= Model.Campaign.MaxPlayers)
+                                {
+                                    <p class="text-muted mt-2">
+                                        <i class="fas fa-users me-1"></i>Maximum number of players reached (@Model.Campaign.MaxPlayers).
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-history me-2"></i>Sessions</h3>
+            </div>
+            <div class="card-body">
+                @if (Model.Sessions.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var session in Model.Sessions.OrderByDescending(s => s.StartedAt))
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">Session @session.Id</h5>
+                                    <small>
+                                                                            @session.StartedAt.ToString("MMM d, yyyy")
+                                    </small>
+                                </div>
+                                <p class="mb-1">@session.Summary</p>
+                                <small>
+                                    <i class="fas fa-clock me-1"></i>
+                                    @{
+                                        var duration = 0.0;
+                                        if (session.EndedAt.HasValue)
+                                        {
+                                            duration = (session.EndedAt.Value - session.StartedAt).TotalMinutes;
+                                        }
+                                        else
+                                        {
+                                            duration = (DateTime.UtcNow - session.StartedAt).TotalMinutes;
+                                        }
+                                    }
+                                    Duration: @(Math.Round(duration)) minutes
+                                </small>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4>No Sessions Yet</h4>
+                                <p>There are no game sessions in this campaign yet. Start playing to create your first session!</p>
+                                @if (Model.UserInCampaign)
+                                {
+                                    @if (Model.Campaign.ContentGenerationStatus == "ImagesCompleted")
+                                    {
+                                        <a asp-action="Play" asp-route-id="@Model.Campaign.Id" class="btn btn-primary mt-2">
+                                            <i class="fas fa-play me-2"></i>Start Playing
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted mt-2">
+                                            <i class="fas fa-info-circle me-2"></i>Use the main "Generate Campaign Content" button above to start.
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-user me-2"></i>Game Master</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <i class="fas fa-user-circle fa-3x"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Game Master</h5>
+                        <p class="text-muted mb-0">Campaign Owner</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        @if (!Model.UserInCampaign)
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Join Campaign</h3>
+                </div>
+                <div class="card-body">
+                    <p>Join this campaign to start playing!</p>
+                    <div class="d-grid">
+                        <a asp-action="Join" asp-route-id="@Model.Campaign.Id" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Join Campaign
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-play me-2"></i>Play Now</h3>
+                </div>
+                <div class="card-body">
+                    <p>Continue your adventure in this campaign!</p>
+                    <div class="d-grid">
+                        @if (Model.UserInCampaign)
+                        {
+                            if (Model.Campaign.ContentGenerationStatus == "ImagesCompleted")
+                            {
+                                <a asp-action="Play" asp-route-id="@Model.Campaign.Id" class="btn btn-primary">
+                                    <i class="fas fa-play me-2"></i>Start Game Session
+                                </a>
+                            }
+                            else
+                            {
+                                <div class="text-muted">
+                                    <i class="fas fa-info-circle me-2"></i>Use the main "Generate Campaign Content" button above to start.
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-dice-d20 me-2"></i>Campaign Stats</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Characters
+                        <span class="badge bg-primary rounded-pill">@Model.Characters.Count</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Sessions
+                        <span class="badge bg-primary rounded-pill">@Model.Sessions.Count</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Player Limit
+                        <span class="badge bg-primary rounded-pill">@Model.Campaign.MaxPlayers</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Ensure FontAwesome animations work -->
+    <style>
+        .fa-spin {
+            -webkit-animation: fa-spin 2s infinite linear;
+            animation: fa-spin 2s infinite linear;
+        }
+        
+        @@-webkit-keyframes fa-spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        
+        @@keyframes fa-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .generation-status-alert {
+            border-left: 4px solid #007bff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+    </style>
+
+    <script>
+        // Content generation functionality with inline alerts (no modal)
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateContentBtnMain = document.getElementById('generateContentBtnMain');
+            const retryGenerateContentBtnMain = document.getElementById('retryGenerateContentBtnMain');
+            
+            // Global variables for status monitoring
+            let statusCheckInterval;
+            let statusCheckRetryCount = 0;
+            let isGenerating = false; // Flag pour éviter les clics multiples
+            
+            // ✅ NOUVEAU : Démarrer monitoring automatique si génération en cours
+            const currentCharacterStatus = '@Model.Campaign.CharacterGenerationStatus';
+            const currentContentStatus = '@Model.Campaign.ContentGenerationStatus';
+            
+            if (currentCharacterStatus === 'InProgress' || 
+                currentContentStatus === 'InProgress' || 
+                currentContentStatus === 'ImagesInProgress') {
+                console.log('🔄 Génération en cours détectée - démarrage du monitoring automatique');
+                console.log(`Status initial: Character=${currentCharacterStatus}, Content=${currentContentStatus}`);
+                
+                // Démarrer le monitoring immédiatement
+                setTimeout(() => {
+                    startStatusChecking('@Model.Campaign.Id', currentContentStatus, currentCharacterStatus);
+                }, 1000); // 1 seconde pour laisser la page finir de charger
+            }
+            
+            // Fonction pour désactiver tous les boutons de génération
+            function disableAllGenerateButtons() {
+                // ✅ AMÉLIORATION : Utiliser updateMainButton pour une mise à jour cohérente
+                updateMainButton('generating', 'Generating Content & Images...');
+                
+                const retryBtn = document.getElementById('retryGenerateContentBtnMain');
+                if (retryBtn) {
+                    retryBtn.disabled = true;
+                    retryBtn.classList.add('disabled');
+                }
+                isGenerating = true;
+            }
+            
+            // ✅ NOUVELLE FONCTION : Mise à jour temps réel du bouton principal
+            function updateMainButton(state, buttonText = '') {
+                const mainBtn = document.getElementById('generateContentBtnMain');
+                if (!mainBtn) return;
+                
+                switch(state) {
+                    case 'ready':
+                        mainBtn.disabled = false;
+                        mainBtn.className = 'btn btn-success';
+                        mainBtn.innerHTML = '<i class="fas fa-magic me-2"></i>' + (buttonText || 'Generate Campaign Content');
+                        break;
+                    case 'generating':
+                        mainBtn.disabled = true;
+                        mainBtn.className = 'btn btn-warning';
+                        mainBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>' + (buttonText || 'Generating Content & Images...');
+                        break;
+                    case 'completed':
+                        mainBtn.disabled = true;
+                        mainBtn.className = 'btn btn-success';
+                        mainBtn.innerHTML = '<i class="fas fa-check me-2"></i>' + (buttonText || 'Generation Complete');
+                        break;
+                    case 'failed':
+                        mainBtn.disabled = false;
+                        mainBtn.className = 'btn btn-danger';
+                        mainBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + (buttonText || 'Retry Generation');
+                        break;
+                }
+            }
+            
+            // Fonction pour activer tous les boutons de génération
+            function enableAllGenerateButtons() {
+                // Re-récupérer les boutons au cas où ils auraient été créés dynamiquement
+                const currentGenerateContentBtn = document.getElementById('generateContentBtnMain');
+                const currentRetryGenerateContentBtn = document.getElementById('retryGenerateContentBtnMain');
+                
+                // ✅ AMÉLIORATION : Utiliser updateMainButton pour une mise à jour cohérente
+                updateMainButton('ready', 'Generate Campaign Content');
+                
+                if (currentRetryGenerateContentBtn) {
+                    currentRetryGenerateContentBtn.disabled = false;
+                    currentRetryGenerateContentBtn.classList.remove('disabled');
+                }
+                
+                // Si le bouton generateContentBtnMain n'existe pas, le créer dynamiquement
+                if (!currentGenerateContentBtn && @Model.IsOwner.ToString().ToLower()) {
+                    createGenerateContentButton();
+                }
+                
+                isGenerating = false;
+            }
+            
+            // Fonction pour créer dynamiquement le bouton de génération de contenu
+            function createGenerateContentButton() {
+                // Trouver le conteneur des boutons d'action
+                const actionButtonsContainer = document.querySelector('.d-flex.gap-2');
+                if (actionButtonsContainer) {
+                    // Supprimer les boutons disabled existants
+                    const disabledButtons = actionButtonsContainer.querySelectorAll('button[disabled]');
+                    disabledButtons.forEach(btn => btn.remove());
+                    
+                    // Vérifier si le bouton n'existe pas déjà
+                    const existingButton = actionButtonsContainer.querySelector('#generateContentBtnMain');
+                    if (!existingButton) {
+                        // Créer le nouveau bouton
+                        const newButton = document.createElement('button');
+                        newButton.id = 'generateContentBtnMain';
+                        newButton.className = 'btn btn-success';
+                        newButton.setAttribute('data-campaign-id', '@Model.Campaign.Id');
+                        newButton.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Campaign Content';
+                        
+                        // Ajouter l'événement click
+                        newButton.addEventListener('click', function() {
+                            const campaignId = this.getAttribute('data-campaign-id');
+                            generateCampaignContent(campaignId);
+                        });
+                        
+                        // Insérer le bouton au début du conteneur (avant le bouton "Back to List")
+                        const backButton = actionButtonsContainer.querySelector('a[href*="Index"]');
+                        if (backButton) {
+                            actionButtonsContainer.insertBefore(newButton, backButton);
+                        } else {
+                            actionButtonsContainer.appendChild(newButton);
+                        }
+                        
+                        console.log('✅ Created Generate Campaign Content button dynamically');
+                    } else {
+                        // Activer le bouton existant s'il est désactivé
+                        existingButton.disabled = false;
+                        existingButton.classList.remove('disabled');
+                        console.log('✅ Enabled existing Generate Campaign Content button');
+                    }
+                } else {
+                    console.warn('❌ Could not find action buttons container');
+                }
+            }
+            
+            // Main generate button
+            if (generateContentBtnMain) {
+                generateContentBtnMain.addEventListener('click', function() {
+                    const campaignId = this.getAttribute('data-campaign-id');
+                    generateCampaignContent(campaignId);
+                });
+            }
+            
+            // Main retry button
+            if (retryGenerateContentBtnMain) {
+                retryGenerateContentBtnMain.addEventListener('click', function() {
+                    const campaignId = this.getAttribute('data-campaign-id');
+                    generateCampaignContent(campaignId);
+                });
+            }
+            
+            // Auto-refresh status if generation is in progress
+            const contentStatusValue = '@Model.Campaign.ContentGenerationStatus';
+            const characterStatusValue = '@Model.Campaign.CharacterGenerationStatus';
+            
+            // Check localStorage for persistent generation state
+            const persistedState = localStorage.getItem('campaign_@Model.Campaign.Id');
+            let shouldCheckStatus = false;
+            
+            if (persistedState) {
+                const state = JSON.parse(persistedState);
+                if (state.isInProgress && (Date.now() - state.timestamp) < 1800000) { // 30 minutes
+                    shouldCheckStatus = true;
+                    isGenerating = true;
+                }
+            }
+            
+            if (contentStatusValue === 'InProgress' || contentStatusValue === 'Completed' || contentStatusValue === 'ImagesInProgress' || 
+                characterStatusValue === 'InProgress' || shouldCheckStatus) {
+                
+                isGenerating = true;
+                // Save state to localStorage
+                localStorage.setItem('campaign_@Model.Campaign.Id', JSON.stringify({
+                    isInProgress: true,
+                    timestamp: Date.now()
+                }));
+                
+                startStatusChecking('@Model.Campaign.Id', contentStatusValue, characterStatusValue);
+            }
+            
+            function createOrUpdateStatusAlert(type, message, details, showProgress = true) {
+                // Remove existing status alerts
+                const existingAlerts = document.querySelectorAll('.generation-status-alert');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                // Create new status alert
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} generation-status-alert`;
+                
+                let iconClass = 'fas fa-spinner fa-spin';
+                if (type === 'success') iconClass = 'fas fa-check-circle';
+                else if (type === 'danger') iconClass = 'fas fa-exclamation-triangle';
+                else if (type === 'warning') iconClass = 'fas fa-spinner fa-spin';
+                
+                alertDiv.innerHTML = `
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="${iconClass} fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4>${message}</h4>
+                            <p>${details}</p>
+                            ${showProgress ? '<div class="progress"><div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div></div>' : ''}
+                            <div id="status-log" class="mt-2">
+                                <small class="text-muted">
+                                    <div id="log-entries"></div>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert after the first row (after the header)
+                const headerRow = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4');
+                headerRow.parentNode.insertBefore(alertDiv, headerRow.nextSibling);
+                
+                return alertDiv;
+            }
+            
+            function addLogEntry(message, type = 'info') {
+                const logEntries = document.getElementById('log-entries');
+                if (!logEntries) return;
+                
+                const entry = document.createElement('div');
+                const timestamp = new Date().toLocaleTimeString();
+                
+                let icon = 'fa-info-circle';
+                let colorClass = 'text-info';
+                
+                if (type === 'success') {
+                    icon = 'fa-check-circle';
+                    colorClass = 'text-success';
+                } else if (type === 'error') {
+                    icon = 'fa-exclamation-triangle';
+                    colorClass = 'text-danger';
+                } else if (type === 'warning') {
+                    icon = 'fa-exclamation-circle';
+                    colorClass = 'text-warning';
+                }
+                
+                entry.innerHTML = `
+                    <div class="${colorClass}">
+                        <i class="fas ${icon} me-1"></i>
+                        [${timestamp}] ${message}
+                    </div>
+                `;
+                
+                logEntries.appendChild(entry);
+                logEntries.scrollTop = logEntries.scrollHeight;
+            }
+            
+            function startStatusChecking(campaignId, initialContentStatus, initialCharacterStatus) {
+                let checkCount = 0;
+                statusCheckRetryCount = 0;
+                
+                // Create initial status alert
+                createOrUpdateStatusAlert('info', 'Generation in Progress', 'Monitoring content generation...', true);
+                addLogEntry('Starting status monitoring...', 'info');
+                
+                statusCheckInterval = setInterval(async () => {
+                    checkCount++;
+                    
+                    try {
+                        const response = await fetch(`/Campaign/GetContentStatus/${campaignId}`);
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            statusCheckRetryCount = 0; // Reset retry count on success
+                            
+                            const contentStatus = data.status;
+                            const characterStatus = data.characterStatus;
+                            
+                            console.log(`[Check ${checkCount}] Content: ${contentStatus}, Character: ${characterStatus}`);
+                            addLogEntry(`Status: Content=${contentStatus}, Character=${characterStatus}`, 'info');
+                            
+                            // Check if generation is complete
+                            if (contentStatus === 'Completed' || contentStatus === 'ImagesCompleted') {
+                                addLogEntry('All generation completed successfully!', 'success');
+                                clearInterval(statusCheckInterval);
+                                isGenerating = false;
+                                localStorage.removeItem('campaign_@Model.Campaign.Id');
+                                
+                                // Fermer le popup et recharger pour montrer le bouton Play
+                                createOrUpdateStatusAlert('success', 'Generation Complete!', 'Campaign content and images have been generated successfully!', false);
+                                
+                                // Recharger la page pour montrer le bouton Play Campaign
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 2000);
+                                return;
+                            }
+                            
+                            // Check if character generation is complete - CORRECTION DES PROPRIÉTÉS
+                            if (characterStatus === 'Completed' && (contentStatus === 'NotStarted' || contentStatus === null || contentStatus === '')) {
+                                addLogEntry('Character generation completed successfully!', 'success');
+                                clearInterval(statusCheckInterval);
+                                isGenerating = false;
+                                localStorage.removeItem('campaign_@Model.Campaign.Id');
+                                
+                                console.log('🎯 Character generation complete - activating content generation buttons');
+                                
+                                // Fermer le popup et permettre la génération de contenu
+                                createOrUpdateStatusAlert('success', 'Character Generation Complete!', 'Characters have been generated successfully. You can now generate campaign content.', false);
+                                
+                                // ✅ AMÉLIORATION : Mettre à jour le bouton immédiatement
+                                updateMainButton('ready', 'Generate Campaign Content');
+                                
+                                // Pas de rechargement automatique - laisser l'utilisateur contrôler
+                                return;
+                            }
+                            
+                            // Check if generation failed
+                            if (contentStatus === 'Failed') {
+                                addLogEntry('Content generation failed. You can retry.', 'error');
+                                updateMainButton('failed', 'Retry Generation');
+                                clearInterval(statusCheckInterval);
+                                isGenerating = false;
+                                localStorage.removeItem('campaign_@Model.Campaign.Id');
+                                return;
+                            }
+                            
+                            // Update status alerts for ongoing processes
+                            if (contentStatus === 'InProgress') {
+                                createOrUpdateStatusAlert('info', 'Generating Campaign Content', 'Creating locations, NPCs, and quests. This may take a few minutes.', true);
+                                updateMainButton('generating', 'Creating Content...');
+                            } else if (contentStatus === 'Completed') {
+                                createOrUpdateStatusAlert('info', 'Content Generated Successfully!', 'Now generating images for content.', true);
+                                updateMainButton('generating', 'Creating Images...');
+                            } else if (contentStatus === 'ImagesInProgress') {
+                                createOrUpdateStatusAlert('warning', 'Generating Images', 'Creating portraits and location images.', true);
+                                updateMainButton('generating', 'Creating Images...');
+                            } else if (contentStatus === 'ImagesCompleted') {
+                                createOrUpdateStatusAlert('success', 'Generation Complete!', 'Campaign content and images have been generated successfully!', false);
+                                updateMainButton('completed', 'Generation Complete!');
+                                clearInterval(statusCheckInterval);
+                                isGenerating = false;
+                                localStorage.removeItem('campaign_@Model.Campaign.Id');
+                                
+                                // Recharger la page pour montrer le bouton Play Campaign
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 2000);
+                                return;
+                            } else if (characterStatus === 'InProgress') {
+                                createOrUpdateStatusAlert('info', 'Generating Character Content', 'Creating descriptions and portraits for player characters.', true);
+                            }
+                            
+                        } else {
+                            throw new Error(data.message || 'Failed to get status');
+                        }
+                        
+                    } catch (error) {
+                        statusCheckRetryCount++;
+                        console.error('Error checking status:', error);
+                        
+                        // Améliorer les messages d'erreur
+                        let errorMessage = error.message;
+                        if (error.message.includes('timeout') || error.message.includes('canceled')) {
+                            errorMessage = 'Le service est occupé à générer du contenu. Réessai en cours...';
+                        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                            errorMessage = 'Problème de connexion au service. Réessai en cours...';
+                        } else if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+                            errorMessage = 'Erreur interne du serveur. Réessai en cours...';
+                        }
+                        
+                        addLogEntry(`Status check failed (attempt ${statusCheckRetryCount}): ${errorMessage}`, 'warning');
+                        
+                        // Réduire la fréquence des vérifications en cas d'erreur
+                        if (statusCheckRetryCount >= 5) { // Augmenté à 5 tentatives
+                            clearInterval(statusCheckInterval);
+                            addLogEntry('Génération en cours mais service occupé. La génération se terminera automatiquement.', 'info');
+                            addLogEntry('Vous pouvez rafraîchir la page dans quelques minutes pour voir les résultats.', 'info');
+                            enableAllGenerateButtons();
+                            return;
+                        }
+                        
+                        // Augmenter l'intervalle en cas d'erreur
+                        clearInterval(statusCheckInterval);
+                        statusCheckInterval = setInterval(checkStatus, 60000); // 1 minute en cas d'erreur
+                    }
+                    
+                    // Force reload after 10 minutes to prevent getting stuck (increased from 5 minutes)
+                    if (checkCount >= 40) { // 40 checks * 15 seconds = 10 minutes
+                        clearInterval(statusCheckInterval);
+                        addLogEntry('Generation timeout - forcing page refresh', 'warning');
+                        setTimeout(() => window.location.reload(), 2000);
+                    }
+                    
+                }, 30000); // Check every 30 seconds to reduce system load
+            }
+            
+            function generateCampaignContent(campaignId) {
+                if (isGenerating) {
+                    return; // Prevent multiple concurrent generations
+                }
+                
+                // ✅ AMÉLIORATION : Mettre à jour le bouton IMMÉDIATEMENT
+                updateMainButton('generating', 'Starting Generation...');
+                
+                // Disable all generation buttons
+                disableAllGenerateButtons();
+                
+                // Show status alert instead of modal
+                createOrUpdateStatusAlert('info', 'Starting Campaign Generation', 'Initializing content generation request...', true);
+                addLogEntry('Sending generation request...', 'info');
+                
+                fetch(`/Campaign/GenerateContent/${campaignId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isGenerating = true;
+                        addLogEntry('Generation request sent successfully!', 'success');
+                        createOrUpdateStatusAlert('info', 'Generation Request Accepted', 'Campaign content generation has started. Monitoring progress...', true);
+                        
+                        // ✅ AMÉLIORATION : Bouton continue à montrer le progrès
+                        updateMainButton('generating', 'Generating Content...');
+                        
+                        // Start monitoring immediately
+                        setTimeout(() => {
+                            startStatusChecking(campaignId, 'NotStarted', '@Model.Campaign.CharacterGenerationStatus');
+                        }, 2000);
+                        
+                    } else {
+                        throw new Error(data.message || 'Unknown error occurred');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addLogEntry(`Generation request failed: ${error.message}`, 'error');
+                    createOrUpdateStatusAlert('danger', 'Generation Failed', 'Failed to start content generation: ' + error.message, false);
+                    
+                    // ✅ AMÉLIORATION : Bouton passe en état d'erreur
+                    updateMainButton('failed', 'Retry Generation');
+                    
+                    isGenerating = false;
+                });
+            }
+        });
+    </script>
+    
+    <style>
+        .character-portrait-thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border: 2px solid #343a40;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .character-portrait-placeholder-thumb {
+            width: 60px;
+            height: 60px;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            font-size: 1.5rem;
+        }
+        
+        .character-portrait-placeholder-thumb i {
+            font-size: 2rem;
+        }
+    </style>
+} 

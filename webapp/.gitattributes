@@ -1,0 +1,70 @@
+# ===========================================================================
+# .gitattributes - WebApp (.NET Core)
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SÉCURITÉ SPÉCIFIQUE .NET
+# ---------------------------------------------------------------------------
+# Fichiers de configuration sensibles
+appsettings.Production.json filter=git-crypt diff=git-crypt
+appsettings.Staging.json filter=git-crypt diff=git-crypt
+secrets.json filter=git-crypt diff=git-crypt
+
+# Certificats SSL
+*.pfx filter=git-crypt diff=git-crypt binary
+*.p12 filter=git-crypt diff=git-crypt binary
+*.crt binary
+*.cer binary
+
+# ---------------------------------------------------------------------------
+# FICHIERS .NET CORE
+# ---------------------------------------------------------------------------
+# Projets et solutions
+*.sln text eol=crlf
+*.csproj text
+*.vbproj text
+*.fsproj text
+*.props text
+*.targets text
+
+# Code C#
+*.cs text diff=csharp eol=lf
+
+# Razor et Blazor
+*.razor text
+*.cshtml text
+*.vbhtml text
+
+# Configuration
+*.config text
+*.json text
+*.xml text
+
+# ---------------------------------------------------------------------------
+# FICHIERS WEB
+# ---------------------------------------------------------------------------
+# Feuilles de style
+*.css text diff=css
+*.scss text
+*.sass text
+*.less text
+
+# JavaScript
+*.js text
+*.ts text
+*.jsx text
+*.tsx text
+
+# ---------------------------------------------------------------------------
+# FICHIERS GÉNÉRÉS
+# ---------------------------------------------------------------------------
+# Build outputs
+bin/* linguist-generated=true
+obj/* linguist-generated=true
+
+# Entity Framework migrations
+Migrations/* linguist-generated=true
+
+# Images uploadées
+wwwroot/images/* linguist-generated=true binary
+wwwroot/uploads/* linguist-generated=true binary

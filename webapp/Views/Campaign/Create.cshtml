@@ -1,0 +1,167 @@
+@model DnDGameMaster.WebApp.ViewModels.CampaignCreateViewModel
+
+@{
+    ViewData["Title"] = "Create New Campaign";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-book-open me-2"></i>Create New Campaign</h1>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="mb-4">
+                <div class="form-floating">
+                    <input asp-for="Name" class="form-control" placeholder="Campaign Name" />
+                    <label asp-for="Name">Campaign Name</label>
+                </div>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-4">
+                <div class="form-floating">
+                    <select asp-for="Language" class="form-select">
+                        <option value="English">English</option>
+                        <option value="French">Français</option>
+                        <option value="German">Deutsch</option>
+                        <option value="Spanish">Español</option>
+                        <option value="Italian">Italiano</option>
+                        <option value="Portuguese">Português</option>
+                        <option value="Russian">Русский</option>
+                        <option value="Japanese">日本語</option>
+                        <option value="Chinese">中文</option>
+                    </select>
+                    <label asp-for="Language">Game Language</label>
+                </div>
+                <div class="form-text">The AI Game Master will communicate in this language</div>
+                <span asp-validation-for="Language" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-4">
+                <div class="form-floating">
+                    <textarea asp-for="Description" class="form-control" style="height: 150px;" placeholder="Campaign Description"></textarea>
+                    <label asp-for="Description">Campaign Description</label>
+                </div>
+                <span asp-validation-for="Description" class="text-danger"></span>
+                <div class="form-text">Describe your campaign, its plot hooks, and general themes. If left empty, the AI will generate one based on the campaign name and settings.</div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="campaignSettings">Campaign Settings</label>
+                <select multiple id="campaignSettings" class="form-select" style="height: 150px;">
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="High Fantasy">High Fantasy</option>
+                    <option value="Low Fantasy">Low Fantasy</option>
+                    <option value="Dark Fantasy">Dark Fantasy</option>
+                    <option value="Steampunk">Steampunk</option>
+                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="Modern">Modern</option>
+                    <option value="Post-Apocalyptic">Post-Apocalyptic</option>
+                    <option value="Horror">Horror</option>
+                    <option value="Urban Fantasy">Urban Fantasy</option>
+                    <option value="Western">Western</option>
+                    <option value="Historical">Historical</option>
+                    <option value="Cyberpunk">Cyberpunk</option>
+                    <option value="Pirate">Pirate</option>
+                    <option value="Space Opera">Space Opera</option>
+                    <option value="Medieval">Medieval</option>
+                    <option value="Renaissance">Renaissance</option>
+                    <option value="Oriental">Oriental</option>
+                    <option value="Arabian">Arabian</option>
+                    <option value="Norse">Norse</option>
+                </select>
+                <div class="form-text">Hold Ctrl/Cmd to select multiple settings</div>
+                <input type="hidden" asp-for="Settings" id="settingsInput" />
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <select asp-for="StartingLevel" class="form-select">
+                            @for (int i = 1; i <= 20; i++)
+                            {
+                                <option value="@i">Level @i</option>
+                            }
+                        </select>
+                        <label asp-for="StartingLevel">Starting Level</label>
+                    </div>
+                    <span asp-validation-for="StartingLevel" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <select asp-for="MaxPlayers" class="form-select">
+                            @for (int i = 1; i <= 10; i++)
+                            {
+                                <option value="@i">@i Player@(i > 1 ? "s" : "")</option>
+                            }
+                        </select>
+                        <label asp-for="MaxPlayers">Max Players</label>
+                    </div>
+                    <span asp-validation-for="MaxPlayers" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="form-check form-switch">
+                    <input asp-for="IsPublic" class="form-check-input" role="switch" />
+                    <label asp-for="IsPublic" class="form-check-label">Make this campaign public</label>
+                </div>
+                <div class="form-text">Public campaigns can be discovered and joined by other players</div>
+            </div>
+            
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Create Campaign
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to List
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3><i class="fas fa-info-circle me-2"></i>Creating a Great Campaign</h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-scroll fa-3x mb-3 text-primary"></i>
+                    <h4>Compelling Story</h4>
+                    <p>Create an engaging storyline with interesting plot hooks and meaningful choices for your players.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-chess-knight fa-3x mb-3 text-primary"></i>
+                    <h4>Memorable NPCs</h4>
+                    <p>Populate your world with unique characters that have their own motivations and personalities.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-mountain fa-3x mb-3 text-primary"></i>
+                    <h4>Rich Setting</h4>
+                    <p>Develop an immersive world with interesting locations, cultures, and history for players to explore.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Capture selected settings into hidden input
+        document.getElementById('campaignSettings').addEventListener('change', function() {
+            var selectedSettings = Array.from(this.selectedOptions).map(option => option.value);
+            document.getElementById('settingsInput').value = selectedSettings.join(', ');
+        });
+    </script>
+} 

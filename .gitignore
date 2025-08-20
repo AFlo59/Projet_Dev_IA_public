@@ -1,0 +1,138 @@
+# ===========================================================================
+# .gitignore GLOBAL - D&D GameMaster Project
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SÉCURITÉ CRITIQUE - NE JAMAIS COMMITER
+# ---------------------------------------------------------------------------
+# Fichiers contenant des secrets/clés API
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+appsettings.Production.json
+appsettings.Staging.json
+
+# Clés JWT et certificats
+jwtKey.txt
+jwt_secret.txt
+*.jwt
+*.cert
+
+# ---------------------------------------------------------------------------
+# DONNÉES SENSIBLES
+# ---------------------------------------------------------------------------
+# Bases de données locales
+*.db
+*.sqlite
+*.sqlite3
+data.db
+
+# Fichiers de configuration avec credentials
+config.json
+credentials.json
+.credentials
+
+# ---------------------------------------------------------------------------
+# FICHIERS VOLUMINEUX/GÉNÉRÉS
+# ---------------------------------------------------------------------------
+# Images générées par l'IA (trop volumineuses pour Git)
+**/static/images/*.png
+**/static/images/*.jpg
+**/static/images/*.jpeg
+**/static/images/*.webp
+**/wwwroot/images/*.png
+**/wwwroot/images/*.jpg
+
+# Données de scraping/collection
+**/Output/
+datacollection/Output/
+
+# DataReference - Données ETL locales
+data/*.json
+data/*.csv
+data/*.txt
+data/temp/
+
+# ---------------------------------------------------------------------------
+# ENVIRONNEMENTS ET BUILDS
+# ---------------------------------------------------------------------------
+# Python
+**/__pycache__/
+**/venv/
+**/env/
+**/*.pyc
+
+# .NET Core
+**/bin/
+**/obj/
+**/out/
+
+# Node.js (si utilisé)
+**/node_modules/
+package-lock.json
+yarn.lock
+
+# ---------------------------------------------------------------------------
+# LOGS ET TEMPORAIRE
+# ---------------------------------------------------------------------------
+# Tous les logs
+*.log
+**/logs/
+**/Logs/
+docker-logs/
+
+# Fichiers temporaires
+**/temp/
+**/tmp/
+**/cache/
+*.tmp
+*.bak
+
+# ---------------------------------------------------------------------------
+# IDE ET OUTILS
+# ---------------------------------------------------------------------------
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# VSCode
+.vscode/settings.json
+.vscode/launch.json
+
+# JetBrains
+.idea/
+
+# ---------------------------------------------------------------------------
+# SYSTÈME D'EXPLOITATION
+# ---------------------------------------------------------------------------
+# Windows
+Thumbs.db
+desktop.ini
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.nfs*
+
+# ---------------------------------------------------------------------------
+# DOCKER ET CONTENEURS
+# ---------------------------------------------------------------------------
+# Volumes Docker persistants (éviter les données sensibles)
+docker-volumes/
+.docker/
+
+# ---------------------------------------------------------------------------
+# DOCUMENTATION SENSIBLE
+# ---------------------------------------------------------------------------
+# Rapports contenant potentiellement des infos sensibles

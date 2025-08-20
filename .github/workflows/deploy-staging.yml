@@ -1,0 +1,292 @@
+name: 🚀 Deploy to Staging
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  # 🏗️ Build et push des images Docker
+  build-and-push:
+    name: 🏗️ Build Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    strategy:
+      matrix:
+        service: [datareference, llmgamemaster, webapp]
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🔐 Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 📝 Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=staging
+            
+      - name: 🏗️ Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          dockerfile: ./${{ matrix.service }}/Dockerfile${{ matrix.service == 'datareference' && '.api' || '' }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 🚀 Déploiement vers staging
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: staging
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🔧 Setup Docker Compose
+        run: |
+          # Créer le fichier docker-compose.staging.yml
+          cat > docker-compose.staging.yml << 'EOF'
+          version: '3.8'
+          
+          services:
+            datareference_bronze_postgres:
+              image: postgres:14
+              environment:
+                POSTGRES_USER: ${{ secrets.DB_ADMIN_USER }}
+                POSTGRES_PASSWORD: ${{ secrets.DB_ADMIN_PASSWORD }}
+                POSTGRES_DB: bronze_db_staging
+              volumes:
+                - bronze_db_staging:/var/lib/postgresql/data
+              networks:
+                - dnd_staging
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U ${{ secrets.DB_ADMIN_USER }}"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+            
+            datareference_silver_postgres:
+              image: postgres:14
+              environment:
+                POSTGRES_USER: ${{ secrets.DB_ADMIN_USER }}
+                POSTGRES_PASSWORD: ${{ secrets.DB_ADMIN_PASSWORD }}
+                POSTGRES_DB: silver_db_staging
+                DB_READ_USER: ${{ secrets.DB_READ_USER }}
+                DB_READ_PASSWORD: ${{ secrets.DB_READ_PASSWORD }}
+              volumes:
+                - silver_db_staging:/var/lib/postgresql/data
+                - ./datareference/init-scripts:/docker-entrypoint-initdb.d
+              networks:
+                - dnd_staging
+              depends_on:
+                datareference_bronze_postgres:
+                  condition: service_healthy
+            
+            webapp_postgres:
+              image: postgres:14
+              environment:
+                POSTGRES_USER: ${{ secrets.DB_ADMIN_USER }}
+                POSTGRES_PASSWORD: ${{ secrets.DB_ADMIN_PASSWORD }}
+                POSTGRES_DB: app_db_staging
+                GAME_DB_USER: ${{ secrets.GAME_DB_USER }}
+                GAME_DB_PASSWORD: ${{ secrets.GAME_DB_PASSWORD }}
+              volumes:
+                - app_db_staging:/var/lib/postgresql/data
+                - ./webapp/init.sql:/docker-entrypoint-initdb.d/init.sql
+              networks:
+                - dnd_staging
+            
+            datareference_api:
+              image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/datareference:staging
+              environment:
+                SILVER_DB_HOST: datareference_silver_postgres
+                SILVER_DB_NAME: silver_db_staging
+                DB_ADMIN_USER: ${{ secrets.DB_ADMIN_USER }}
+                DB_ADMIN_PASSWORD: ${{ secrets.DB_ADMIN_PASSWORD }}
+                DB_READ_USER: ${{ secrets.DB_READ_USER }}
+                DB_READ_PASSWORD: ${{ secrets.DB_READ_PASSWORD }}
+                JWT_SECRET: ${{ secrets.JWT_SECRET }}
+              ports:
+                - "5000:5000"
+              networks:
+                - dnd_staging
+              depends_on:
+                datareference_silver_postgres:
+                  condition: service_healthy
+            
+            llm_gamemaster:
+              image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/llmgamemaster:staging
+              environment:
+                SILVER_DB_HOST: datareference_silver_postgres
+                SILVER_DB_NAME: silver_db_staging
+                DB_READ_USER: ${{ secrets.DB_READ_USER }}
+                DB_READ_PASSWORD: ${{ secrets.DB_READ_PASSWORD }}
+                APP_DB_HOST: webapp_postgres
+                APP_DB_NAME: app_db_staging
+                GAME_DB_USER: ${{ secrets.GAME_DB_USER }}
+                GAME_DB_PASSWORD: ${{ secrets.GAME_DB_PASSWORD }}
+                OPEN_AI_KEY: ${{ secrets.OPENAI_API_KEY }}
+                ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+              ports:
+                - "5001:5001"
+              networks:
+                - dnd_staging
+              depends_on:
+                datareference_api:
+                  condition: service_started
+                webapp_postgres:
+                  condition: service_healthy
+            
+            webapp:
+              image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/webapp:staging
+              environment:
+                APP_DB_HOST: webapp_postgres
+                APP_DB_NAME: app_db_staging
+                DB_ADMIN_USER: ${{ secrets.DB_ADMIN_USER }}
+                DB_ADMIN_PASSWORD: ${{ secrets.DB_ADMIN_PASSWORD }}
+                GAME_DB_USER: ${{ secrets.GAME_DB_USER }}
+                GAME_DB_PASSWORD: ${{ secrets.GAME_DB_PASSWORD }}
+                BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+                MAILJET_API_KEY: ${{ secrets.MAILJET_API_KEY }}
+                DATA_REFERENCE_API_URL: http://datareference_api:5000
+                LLM_GAMEMASTER_API_URL: http://llm_gamemaster:5001
+                ASPNETCORE_ENVIRONMENT: Staging
+              ports:
+                - "8080:80"
+              networks:
+                - dnd_staging
+              depends_on:
+                webapp_postgres:
+                  condition: service_healthy
+                llm_gamemaster:
+                  condition: service_started
+          
+          networks:
+            dnd_staging:
+              driver: bridge
+          
+          volumes:
+            bronze_db_staging:
+            silver_db_staging:
+            app_db_staging:
+          EOF
+        
+      - name: 🚀 Deploy Services
+        run: |
+          echo "🔄 Stopping existing services..."
+          docker-compose -f docker-compose.staging.yml down --remove-orphans || true
+          
+          echo "🗑️ Cleaning up old images..."
+          docker image prune -f
+          
+          echo "📥 Pulling latest images..."
+          docker-compose -f docker-compose.staging.yml pull
+          
+          echo "🚀 Starting services..."
+          docker-compose -f docker-compose.staging.yml up -d
+          
+          echo "⏳ Waiting for services to be ready..."
+          sleep 60
+        
+      - name: 🔍 Health Check
+        run: |
+          echo "🔍 Checking service health..."
+          
+          # Check DataReference API
+          for i in {1..10}; do
+            if curl -f http://localhost:5000/health; then
+              echo "✅ DataReference API is healthy"
+              break
+            fi
+            echo "⏳ Waiting for DataReference API... ($i/10)"
+            sleep 10
+          done
+          
+          # Check LLMGameMaster API
+          for i in {1..10}; do
+            if curl -f http://localhost:5001/health; then
+              echo "✅ LLMGameMaster API is healthy"
+              break
+            fi
+            echo "⏳ Waiting for LLMGameMaster API... ($i/10)"
+            sleep 10
+          done
+          
+          # Check WebApp
+          for i in {1..10}; do
+            if curl -f http://localhost:8080/; then
+              echo "✅ WebApp is healthy"
+              break
+            fi
+            echo "⏳ Waiting for WebApp... ($i/10)"
+            sleep 10
+          done
+        
+      - name: 🧪 Smoke Tests
+        run: |
+          echo "🧪 Running smoke tests..."
+          
+          # Test DataReference API endpoints
+          echo "Testing DataReference API..."
+          curl -f http://localhost:5000/health
+          
+          # Test LLMGameMaster API endpoints
+          echo "Testing LLMGameMaster API..."
+          curl -f http://localhost:5001/health
+          
+          # Test WebApp endpoints
+          echo "Testing WebApp..."
+          curl -f http://localhost:8080/
+          
+          echo "✅ All smoke tests passed!"
+        
+      - name: 📊 Deploy Status
+        if: always()
+        run: |
+          echo "📊 Deployment Status Summary:"
+          echo "================================"
+          docker-compose -f docker-compose.staging.yml ps
+          
+          echo ""
+          echo "📋 Service Logs (last 50 lines):"
+          echo "================================"
+          docker-compose -f docker-compose.staging.yml logs --tail=50
+        
+      - name: 📢 Notification Success
+        if: success()
+        run: |
+          echo "🎉 Staging deployment successful!"
+          echo "🌐 Access URLs:"
+          echo "   - WebApp: http://localhost:8080"
+          echo "   - DataReference API: http://localhost:5000"
+          echo "   - LLMGameMaster API: http://localhost:5001"
+        
+      - name: 📢 Notification Failure
+        if: failure()
+        run: |
+          echo "❌ Staging deployment failed!"
+          echo "🔍 Check the logs above for details"
+          docker-compose -f docker-compose.staging.yml logs 

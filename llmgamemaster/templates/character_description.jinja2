@@ -1,0 +1,57 @@
+Generate a detailed D&D 5e character description for the following character:
+
+**Campaign Context:**
+Campaign: {{ campaign.name }}
+Settings: {{ campaign.settings }}
+{% if campaign.description %}Campaign Description: {{ campaign.description }}{% endif %}
+Language: {{ campaign.language or "English" }}
+
+**Character Information:**
+Name: {{ character.name }}
+Race: {{ character.race }}
+Class: {{ character.class }}
+Gender: {{ character.gender or "Unknown" }}
+Level: {{ character.level }}
+Background: {{ character.background }}
+Alignment: {{ character.alignment }}
+
+**Ability Scores:**
+Strength: {{ character.strength }}
+Dexterity: {{ character.dexterity }}
+Constitution: {{ character.constitution }}
+Intelligence: {{ character.intelligence }}
+Wisdom: {{ character.wisdom }}
+Charisma: {{ character.charisma }}
+
+{% if campaign.language and campaign.language != "English" %}
+Please respond in {{ campaign.language }}. All your descriptions should be in {{ campaign.language }}.
+{% endif %}
+
+**Instructions:**
+Create a rich, immersive character description that fits perfectly within the campaign's {{ campaign.settings }} setting. Structure your response exactly as follows:
+
+**Physical Appearance:**
+Describe height, build, distinctive features, eye color, hair color/style, skin tone, and any scars or markings. Consider how their ability scores would influence their physical appearance: STR affects muscle definition and build, DEX affects grace and posture, CON affects health and vitality, CHA affects attractiveness and presence. Be specific and detailed - this will be used for portrait generation.
+
+**Personality Traits:**
+Based on their {{ character.alignment }} alignment, {{ character.background }} background, and ability scores (especially INT, WIS, CHA), describe their personality, virtues, flaws, and motivations.
+
+**Background Story:**
+Explain their {{ character.background }} upbringing, defining events that shaped them, and how they became a {{ character.class }}. Make it fit the {{ campaign.settings }} setting.
+
+**Unique Quirks:**
+Give them 1-2 distinctive habits, mannerisms, or quirks that make them memorable.
+
+**Goals and Motivations:**
+Describe 1-2 personal goals that would drive them in this {{ campaign.settings }} campaign.
+
+**Combat Style:**
+Based on their class ({{ character.class }}) and ability scores, describe how they typically approach combat situations.
+
+**Important Guidelines:**
+- Keep the entire description under 500 words
+- Use proper D&D 5e terminology
+- Make the character feel authentic to the {{ campaign.settings }} setting
+- Ensure the description reflects their ability scores realistically
+- Make them unique and interesting while staying true to their {{ character.alignment }} alignment
+- The Physical Appearance section should be detailed enough for portrait generation 

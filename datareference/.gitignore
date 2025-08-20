@@ -1,0 +1,104 @@
+# ===========================================================================
+# .gitignore pour DataReference
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Configuration sensible - NE PAS COMMITER
+# ---------------------------------------------------------------------------
+# Fichiers .env contenant les clés API et secrets
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Fichiers Python standard
+# ---------------------------------------------------------------------------
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environnements virtuels Python
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ---------------------------------------------------------------------------
+# Logs et fichiers temporaires
+# ---------------------------------------------------------------------------
+# Logs du processus ETL
+*.log
+logs/
+Logs/
+
+# Fichiers temporaires
+temp/
+tmp/
+cache/
+
+# ---------------------------------------------------------------------------
+# Fichiers IDE et éditeurs
+# ---------------------------------------------------------------------------
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Fichiers temporaires
+*~
+*.swp
+*.swo
+
+# ---------------------------------------------------------------------------
+# Fichiers système
+# ---------------------------------------------------------------------------
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ---------------------------------------------------------------------------
+# Spécifique DataReference
+# ---------------------------------------------------------------------------
+# Données ETL sensibles
+*.sql.bak
+dump.sql
+backup_*.sql
+
+# Fichiers de configuration de DB
+pg_service.conf
+.pgpass
+
+# Test data
+test_data/
+sample_data/
+
+# Jupyter notebooks avec outputs
+*.ipynb_checkpoints/
+.ipynb_checkpoints

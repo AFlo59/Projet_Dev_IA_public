@@ -1,0 +1,134 @@
+# ===========================================================================
+# .gitignore pour LLMGameMaster
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Configuration sensible - NE PAS COMMITER
+# ---------------------------------------------------------------------------
+# Fichiers .env contenant les clés API et secrets
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Fichiers générés par l'IA
+# ---------------------------------------------------------------------------
+# Images générées par l'IA (trop volumineuses)
+static/generated_images/
+static/uploads/
+
+# Logs de l'IA
+ai_logs/
+llm_logs/
+
+# ---------------------------------------------------------------------------
+# Fichiers Python standard
+# ---------------------------------------------------------------------------
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environnements virtuels Python
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ---------------------------------------------------------------------------
+# Logs et fichiers temporaires
+# ---------------------------------------------------------------------------
+# Logs de l'application
+*.log
+logs/
+Logs/
+
+# Fichiers temporaires
+temp/
+tmp/
+cache/
+
+# ---------------------------------------------------------------------------
+# Fichiers IDE et éditeurs
+# ---------------------------------------------------------------------------
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Fichiers temporaires
+*~
+*.swp
+*.swo
+
+# ---------------------------------------------------------------------------
+# Fichiers système
+# ---------------------------------------------------------------------------
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ---------------------------------------------------------------------------
+# Spécifique LLMGameMaster
+# ---------------------------------------------------------------------------
+# Images générées par l'IA (volumineuses)
+static/images/characters/*.png
+static/images/characters/*.jpg
+static/images/npcs/*.png
+static/images/npcs/*.jpg
+static/images/locations/*.png
+static/images/locations/*.jpg
+static/images/campaigns/*.png
+static/images/campaigns/*.jpg
+
+# Modèles AI téléchargés
+models/
+*.model
+*.bin
+*.safetensors
+
+# Caches LLM
+.cache/
+llm_cache/
+embeddings_cache/
+
+# Données de session/conversation
+sessions/
+conversations/
+chat_history/
+
+# Fichiers de test IA
+test_prompts/
+test_responses/
+benchmark_results/
+
+# Configuration API keys (double sécurité)
+openai_key.txt
+anthropic_key.txt
+api_keys.json

@@ -1,0 +1,44 @@
+# ===========================================================================
+# .gitattributes - DataCollection (Scraping/Python)  
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SÉCURITÉ SPÉCIFIQUE SCRAPING
+# ---------------------------------------------------------------------------
+# Clés API et tokens
+.env filter=git-crypt diff=git-crypt
+github_token.txt filter=git-crypt diff=git-crypt
+api_keys.json filter=git-crypt diff=git-crypt
+
+# ---------------------------------------------------------------------------
+# DONNÉES COLLECTÉES
+# ---------------------------------------------------------------------------
+# Fichiers JSON collectés (volumineux)
+Output/**/*.json linguist-generated=true binary
+data/**/*.json linguist-generated=true
+*.json linguist-generated=true
+
+# Images collectées (binaires)
+Output/**/*.png linguist-generated=true binary
+Output/**/*.jpg linguist-generated=true binary  
+Output/**/*.webp linguist-generated=true binary
+*.png linguist-generated=true binary
+*.jpg linguist-generated=true binary
+*.webp linguist-generated=true binary
+
+# ---------------------------------------------------------------------------
+# LOGS ET PROGRESSION
+# ---------------------------------------------------------------------------
+# Fichiers de log
+*.log text
+Logs/*.log text
+
+# Fichiers de progression
+progress.txt text
+download_progress.json text
+
+# ---------------------------------------------------------------------------
+# PYTHON
+# ---------------------------------------------------------------------------
+# Scripts Python
+*.py text diff=python eol=lf

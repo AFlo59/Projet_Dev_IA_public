@@ -1,0 +1,36 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    netcat-openbsd \
+    postgresql-client \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the import script and helper scripts
+COPY import_json.py .
+COPY wait-for-it.sh .
+COPY check_tables.py .
+
+# Set execute permissions
+RUN chmod +x import_json.py
+RUN chmod +x wait-for-it.sh
+RUN chmod +x check_tables.py
+
+# Create data directory
+RUN mkdir -p /app/data
+
+# Note: Database connection parameters are provided via environment variables from docker-compose
+# No hardcoded credentials in the image for security
+
+# Use wait-for-it.sh to wait for the database before running the import
+# Note: We specify the PGDATABASE explicitly to avoid connection issues
+ENTRYPOINT ["./wait-for-it.sh", "datareference_bronze_postgres:5432", "-t", "300", "--", "python", "import_json.py"] 

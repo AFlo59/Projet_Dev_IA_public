@@ -1,0 +1,292 @@
+
+@model DnDGameMaster.WebApp.Controllers.ProfileViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            
+            @if (TempData["StatusMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>@TempData["StatusMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="mb-0"><i class="fas fa-user-circle me-2"></i>My Profile</h1>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Profile Information Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Profile Information</h4>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="Profile" method="post">
+                                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input asp-for="Email" class="form-control" readonly style="background-color: #f8f9fa;" />
+                                            <label asp-for="Email">Email Address</label>
+                                            <div class="form-text">Email address cannot be changed</div>
+                                        </div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input asp-for="FirstName" class="form-control" placeholder="First Name" />
+                                            <label asp-for="FirstName">First Name</label>
+                                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                                        </div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input asp-for="LastName" class="form-control" placeholder="Last Name" />
+                                            <label asp-for="LastName">Last Name</label>
+                                            <span asp-validation-for="LastName" class="text-danger"></span>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Update Profile
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="mb-0"><i class="fas fa-lock me-2"></i>Change Password</h4>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="ChangePassword" method="post" id="changePasswordForm">
+                                        <div id="passwordValidationSummary" class="text-danger mb-3"></div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input type="password" name="CurrentPassword" class="form-control" placeholder="Current Password" required />
+                                            <label for="CurrentPassword">Current Password</label>
+                                        </div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input type="password" name="NewPassword" id="newPassword" class="form-control" placeholder="New Password" required />
+                                            <label for="NewPassword">New Password</label>
+                                            <div class="form-text">Password must be at least 6 characters long</div>
+                                        </div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input type="password" name="ConfirmPassword" id="confirmPassword" class="form-control" placeholder="Confirm New Password" required />
+                                            <label for="ConfirmPassword">Confirm New Password</label>
+                                            <div id="passwordMatchError" class="form-text text-danger d-none">Passwords do not match</div>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-warning" id="changePasswordBtn">
+                                            <i class="fas fa-key me-2"></i>Change Password
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Statistics Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-chart-line me-2"></i>Account Statistics</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="stat-card">
+                                        <i class="fas fa-dice-d20 fa-2x text-primary mb-2"></i>
+                                        <h5>Campaigns</h5>
+                                        <p class="h4 text-primary" id="campaignCount">0</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-card">
+                                        <i class="fas fa-user-shield fa-2x text-success mb-2"></i>
+                                        <h5>Characters</h5>
+                                        <p class="h4 text-success" id="characterCount">0</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-card">
+                                        <i class="fas fa-calendar-alt fa-2x text-info mb-2"></i>
+                                        <h5>Member Since</h5>
+                                        <p class="h6 text-info" id="memberSince">@DateTime.Now.ToString("MMM yyyy")</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <a asp-controller="Campaign" asp-action="Index" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-book-open me-2"></i>View My Campaigns
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <a asp-controller="Character" asp-action="Index" class="btn btn-outline-success w-100">
+                                        <i class="fas fa-user-shield me-2"></i>View My Characters
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <a asp-controller="Campaign" asp-action="Create" class="btn btn-outline-info w-100">
+                                        <i class="fas fa-plus me-2"></i>Create New Campaign
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <a asp-controller="Character" asp-action="Create" class="btn btn-outline-warning w-100">
+                                        <i class="fas fa-user-plus me-2"></i>Create New Character
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        opacity: .65;
+        transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password confirmation validation
+            const newPassword = document.getElementById('newPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const passwordMatchError = document.getElementById('passwordMatchError');
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            
+            function validatePasswordMatch() {
+                if (confirmPassword.value && newPassword.value !== confirmPassword.value) {
+                    passwordMatchError.classList.remove('d-none');
+                    changePasswordBtn.disabled = true;
+                } else {
+                    passwordMatchError.classList.add('d-none');
+                    changePasswordBtn.disabled = false;
+                }
+            }
+            
+            newPassword.addEventListener('input', validatePasswordMatch);
+            confirmPassword.addEventListener('input', validatePasswordMatch);
+            
+            // Change password form submission
+            document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                
+                changePasswordBtn.disabled = true;
+                changePasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Changing Password...';
+                
+                fetch('/Account/ChangePassword', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        const alertHtml = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>Password changed successfully
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        document.querySelector('.container').insertAdjacentHTML('afterbegin', alertHtml);
+                        
+                        // Reset form
+                        this.reset();
+                    } else {
+                        // Show error messages
+                        const errorDiv = document.getElementById('passwordValidationSummary');
+                        errorDiv.innerHTML = data.errors.join('<br>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const errorDiv = document.getElementById('passwordValidationSummary');
+                    errorDiv.innerHTML = 'An error occurred while changing the password. Please try again.';
+                })
+                .finally(() => {
+                    changePasswordBtn.disabled = false;
+                    changePasswordBtn.innerHTML = '<i class="fas fa-key me-2"></i>Change Password';
+                });
+            });
+            
+            // Load user statistics
+            loadUserStatistics();
+        });
+        
+        function loadUserStatistics() {
+            // Load campaign count
+            fetch('/Account/GetUserStatistics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('campaignCount').textContent = data.campaignCount || 0;
+                        document.getElementById('characterCount').textContent = data.characterCount || 0;
+                        
+                        if (data.memberSince) {
+                            document.getElementById('memberSince').textContent = new Date(data.memberSince).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading statistics:', error);
+                });
+        }
+    </script>
+} 

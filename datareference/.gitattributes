@@ -1,0 +1,33 @@
+# ===========================================================================
+# .gitattributes - DataReference (ETL/Python)
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SÉCURITÉ SPÉCIFIQUE ETL
+# ---------------------------------------------------------------------------
+# Fichiers de connexion DB - JAMAIS en clair
+*.pgpass filter=git-crypt diff=git-crypt
+pg_service.conf filter=git-crypt diff=git-crypt
+.credentials filter=git-crypt diff=git-crypt
+dump.sql filter=git-crypt diff=git-crypt
+backup_*.sql filter=git-crypt diff=git-crypt
+
+# ---------------------------------------------------------------------------
+# FICHIERS DE DONNÉES
+# ---------------------------------------------------------------------------
+# Données JSON (peuvent être volumineuses)
+*.json text
+data/*.json linguist-generated=true
+
+# Fichiers CSV/TSV pour l'ETL
+*.csv text eol=lf
+*.tsv text eol=lf
+
+# Scripts SQL
+*.sql text diff=sql eol=lf
+
+# ---------------------------------------------------------------------------
+# PYTHON SPÉCIFIQUE
+# ---------------------------------------------------------------------------
+# Notebooks Jupyter
+*.ipynb text eol=lf
