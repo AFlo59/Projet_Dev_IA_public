@@ -13,7 +13,7 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
-# Compatibility class for tests
+# Compatibility classes for tests
 class OpenAIService:
     """Compatibility class for tests - wraps LLMService"""
     def __init__(self):
@@ -21,6 +21,29 @@ class OpenAIService:
     
     def __getattr__(self, name):
         return getattr(self.llm_service, name)
+
+class AnthropicService:
+    """Compatibility class for tests - wraps LLMService"""
+    def __init__(self):
+        self.llm_service = LLMService()
+    
+    def __getattr__(self, name):
+        return getattr(self.llm_service, name)
+
+class LLMConfig:
+    """Compatibility configuration class for tests"""
+    def __init__(self, provider="openai", model="gpt-4o", max_tokens=4000, temperature=0.7):
+        self.provider = provider
+        self.model = model
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+
+class LLMResponse:
+    """Compatibility response class for tests"""
+    def __init__(self, content, usage=None, model="gpt-4o"):
+        self.content = content
+        self.usage = usage or {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        self.model = model
 
 class LLMService:
     def __init__(self):
