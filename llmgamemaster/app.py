@@ -1571,16 +1571,44 @@ async def generate_campaign_content_task(campaign_id: int):
                 main_town_id = town_location.get("Id")
                 logger.info(f"✅ Created main town: {main_town_name}")
                 
-                # 2. Create sub-locations with parent hierarchy
-                sub_locations = [
-                    {"name": "The Golden Dragon Inn", "type": "Inn", "desc": "A welcoming inn where travelers rest and share tales.", "discovered": True},
-                    {"name": "Market Square", "type": "Market", "desc": "The bustling center of commerce in town.", "discovered": True},
-                    {"name": "Temple of Light", "type": "Temple", "desc": "A sacred place where clerics offer healing and guidance.", "discovered": True},
-                    {"name": "The Old Watchtower", "type": "Tower", "desc": "An ancient tower that overlooks the town and surrounding lands.", "discovered": False},
-                    {"name": "Whispering Woods", "type": "Forest", "desc": "A mysterious forest on the edge of town where strange sounds echo.", "discovered": False},
-                    {"name": "Goblin Cave", "type": "Cave", "desc": "A dangerous cave system inhabited by hostile creatures.", "discovered": False},
-                    {"name": "Ancient Ruins", "type": "Ruins", "desc": "Crumbling stone structures that hold secrets of the past.", "discovered": False}
-                ]
+                # ✅ NOUVEAU : Génération dynamique selon le thème de la campagne
+                logger.info(f"🎨 Generating locations based on campaign theme: {campaign.get('settings', 'Fantasy')}")
+                
+                # Use the campaign theme to generate appropriate locations
+                theme_lower = campaign.get('settings', 'fantasy').lower()
+                campaign_name = campaign.get('name', 'Adventure')
+                
+                if 'post-apocalyptic' in theme_lower or 'horror' in theme_lower:
+                    sub_locations = [
+                        {"name": f"{campaign_name} Bunker", "type": "Shelter", "desc": "A fortified underground shelter where survivors gather.", "discovered": True},
+                        {"name": "Scavenger Market", "type": "Market", "desc": "A makeshift trading post for essential supplies.", "discovered": True},
+                        {"name": "Emergency Medical Station", "type": "Medical", "desc": "A basic medical facility for treating radiation and injuries.", "discovered": True},
+                        {"name": "Abandoned Watchtower", "type": "Tower", "desc": "A crumbling observation post from before the catastrophe.", "discovered": False},
+                        {"name": "Contaminated Wasteland", "type": "Wasteland", "desc": "A dangerous area full of mutated creatures and radiation.", "discovered": False},
+                        {"name": "Underground Tunnels", "type": "Tunnels", "desc": "Dark passages that might hide secrets or dangers.", "discovered": False},
+                        {"name": "Pre-War Ruins", "type": "Ruins", "desc": "Remnants of civilization from before the disaster.", "discovered": False}
+                    ]
+                elif 'dark fantasy' in theme_lower:
+                    sub_locations = [
+                        {"name": f"{campaign_name} Tavern", "type": "Inn", "desc": "A grim tavern where desperate souls gather in dark times.", "discovered": True},
+                        {"name": "Black Market", "type": "Market", "desc": "A shadowy marketplace dealing in forbidden goods.", "discovered": True},
+                        {"name": "Cursed Shrine", "type": "Temple", "desc": "A defiled place of worship tainted by dark magic.", "discovered": True},
+                        {"name": "Shadow Keep", "type": "Tower", "desc": "A foreboding tower shrouded in perpetual darkness.", "discovered": False},
+                        {"name": "Haunted Forest", "type": "Forest", "desc": "A twisted woodland where the dead do not rest.", "discovered": False},
+                        {"name": "Demon's Pit", "type": "Cave", "desc": "A hellish cavern where evil entities dwell.", "discovered": False},
+                        {"name": "Necropolis", "type": "Ruins", "desc": "Ancient burial grounds now crawling with undead.", "discovered": False}
+                    ]
+                else:
+                    # Fantasy fallback - mais pas les noms hardcodés
+                    sub_locations = [
+                        {"name": f"{campaign_name} Inn", "type": "Inn", "desc": "A welcoming inn where travelers rest and share tales.", "discovered": True},
+                        {"name": "Town Square", "type": "Market", "desc": "The bustling center of commerce and trade.", "discovered": True},
+                        {"name": "Sacred Temple", "type": "Temple", "desc": "A holy place where clerics offer healing and guidance.", "discovered": True},
+                        {"name": "Ancient Watchtower", "type": "Tower", "desc": "An old tower that overlooks the surrounding lands.", "discovered": False},
+                        {"name": "Mystic Woods", "type": "Forest", "desc": "A magical forest where fey creatures dwell.", "discovered": False},
+                        {"name": "Hidden Cave", "type": "Cave", "desc": "A mysterious cave system with unknown secrets.", "discovered": False},
+                        {"name": "Lost Ruins", "type": "Ruins", "desc": "Ancient structures holding forgotten knowledge.", "discovered": False}
+                    ]
                 
                 created_sub_locations = []
                 for sub_loc in sub_locations:
@@ -1609,25 +1637,75 @@ async def generate_campaign_content_task(campaign_id: int):
                     except Exception as e:
                         logger.error(f"Error creating sub-location {sub_loc['name']}: {e}")
                 
-                # 3. Create NPCs for each location (1-2 per location)
-                npc_templates = [
-                    # Inn NPCs
-                    {"location": "The Golden Dragon Inn", "name": "Marta Goldweaver", "race": "Human", "class": "Commoner", "type": "Ally", "desc": "The warm-hearted innkeeper who knows all the local gossip."},
-                    {"location": "The Golden Dragon Inn", "name": "Old Tom", "race": "Human", "class": "Veteran", "type": "Ally", "desc": "A retired soldier who shares tales of distant battles."},
-                    # Market NPCs
-                    {"location": "Market Square", "name": "Bjorn Ironforge", "race": "Dwarf", "class": "Merchant", "type": "Ally", "desc": "A skilled blacksmith who sells quality weapons and armor."},
-                    {"location": "Market Square", "name": "Elara Swiftfingers", "race": "Halfling", "class": "Rogue", "type": "Neutral", "desc": "A nimble trader who deals in rare items and information."},
-                    # Temple NPCs
-                    {"location": "Temple of Light", "name": "Brother Marcus", "race": "Human", "class": "Cleric", "type": "Ally", "desc": "A devoted priest who offers healing and spiritual guidance."},
-                    # Tower NPC
-                    {"location": "The Old Watchtower", "name": "Sage Aldwin", "race": "Elf", "class": "Wizard", "type": "Ally", "desc": "An elderly wizard who studies ancient magic and lore."},
-                    # Forest NPC
-                    {"location": "Whispering Woods", "name": "Thorn Shadowleaf", "race": "Elf", "class": "Ranger", "type": "Neutral", "desc": "A mysterious ranger who protects the forest and its secrets."},
-                    # Cave NPC
-                    {"location": "Goblin Cave", "name": "Grashk the Cunning", "race": "Goblin", "class": "Warrior", "type": "Enemy", "desc": "The crafty leader of the goblin tribe."},
-                    # Ruins NPC
-                    {"location": "Ancient Ruins", "name": "Whisper", "race": "Unknown", "class": "Spirit", "type": "Neutral", "desc": "A ghostly presence that guards the ancient secrets."}
-                ]
+                # ✅ NOUVEAU : NPCs dynamiques selon le thème et les locations générées
+                logger.info(f"🎨 Generating NPCs based on campaign theme and created locations")
+                
+                # Build NPCs dynamically based on the created locations and theme
+                npc_templates = []
+                
+                if 'post-apocalyptic' in theme_lower or 'horror' in theme_lower:
+                    # Post-apocalyptic NPCs
+                    for location in sub_locations:
+                        if location["type"] == "Shelter":
+                            npc_templates.extend([
+                                {"location": location["name"], "name": "Commander Steel", "race": "Human", "class": "Veteran", "type": "Ally", "desc": "The grizzled leader of the survivor community."},
+                                {"location": location["name"], "name": "Dr. Caine", "race": "Human", "class": "Medic", "type": "Ally", "desc": "A pre-war doctor trying to help the survivors."}
+                            ])
+                        elif location["type"] == "Market":
+                            npc_templates.append({"location": location["name"], "name": "Scrap Jack", "race": "Human", "class": "Merchant", "type": "Neutral", "desc": "A wasteland trader who deals in salvaged goods."})
+                        elif location["type"] == "Medical":
+                            npc_templates.append({"location": location["name"], "name": "Nurse Helena", "race": "Human", "class": "Healer", "type": "Ally", "desc": "A medical professional treating radiation sickness."})
+                        elif location["type"] == "Tower":
+                            npc_templates.append({"location": location["name"], "name": "Sage Aldwin", "race": "Human", "class": "Scholar", "type": "Ally", "desc": "A pre-war scientist studying the catastrophe."})
+                        elif location["type"] == "Wasteland":
+                            npc_templates.append({"location": location["name"], "name": "Rad-Beast Alpha", "race": "Mutant", "class": "Beast", "type": "Enemy", "desc": "A dangerous mutated creature ruling the wasteland."})
+                        elif location["type"] == "Tunnels":
+                            npc_templates.append({"location": location["name"], "name": "Underground Ghost", "race": "Spirit", "class": "Phantom", "type": "Neutral", "desc": "A lost soul trapped in the tunnels."})
+                        elif location["type"] == "Ruins":
+                            npc_templates.append({"location": location["name"], "name": "Archive AI", "race": "Construct", "class": "Guardian", "type": "Neutral", "desc": "An artificial intelligence protecting pre-war data."})
+                            
+                elif 'dark fantasy' in theme_lower:
+                    # Dark fantasy NPCs
+                    for location in sub_locations:
+                        if location["type"] == "Inn":
+                            npc_templates.extend([
+                                {"location": location["name"], "name": "Grimm the Barkeep", "race": "Human", "class": "Commoner", "type": "Ally", "desc": "A taciturn innkeeper with dark secrets."},
+                                {"location": location["name"], "name": "Bloody Mary", "race": "Human", "class": "Assassin", "type": "Neutral", "desc": "A dangerous woman who offers information for a price."}
+                            ])
+                        elif location["type"] == "Market":
+                            npc_templates.append({"location": location["name"], "name": "Shadow Merchant", "race": "Tiefling", "class": "Warlock", "type": "Neutral", "desc": "A mysterious trader dealing in cursed artifacts."})
+                        elif location["type"] == "Temple":
+                            npc_templates.append({"location": location["name"], "name": "Dark Priest", "race": "Human", "class": "Cleric", "type": "Ally", "desc": "A priest struggling against the encroaching darkness."})
+                        elif location["type"] == "Tower":
+                            npc_templates.append({"location": location["name"], "name": "Sage Aldwin", "race": "Elf", "class": "Wizard", "type": "Ally", "desc": "A wise mage studying forbidden magic to fight evil."})
+                        elif location["type"] == "Forest":
+                            npc_templates.append({"location": location["name"], "name": "Wraith Walker", "race": "Undead", "class": "Spirit", "type": "Enemy", "desc": "A vengeful spirit haunting the dark woods."})
+                        elif location["type"] == "Cave":
+                            npc_templates.append({"location": location["name"], "name": "Demon Lord", "race": "Fiend", "class": "Demon", "type": "Enemy", "desc": "A powerful demon commanding lesser fiends."})
+                        elif location["type"] == "Ruins":
+                            npc_templates.append({"location": location["name"], "name": "Lich King", "race": "Undead", "class": "Necromancer", "type": "Enemy", "desc": "An ancient undead ruler guarding dark secrets."})
+                else:
+                    # Standard fantasy NPCs - using actual location names
+                    for location in sub_locations:
+                        if location["type"] == "Inn":
+                            npc_templates.extend([
+                                {"location": location["name"], "name": "Innkeeper Martha", "race": "Human", "class": "Commoner", "type": "Ally", "desc": "The warm-hearted innkeeper who knows local stories."},
+                                {"location": location["name"], "name": "Veteran Tom", "race": "Human", "class": "Fighter", "type": "Ally", "desc": "A retired soldier sharing tales of adventure."}
+                            ])
+                        elif location["type"] == "Market":
+                            npc_templates.append({"location": location["name"], "name": "Merchant Bjorn", "race": "Dwarf", "class": "Merchant", "type": "Ally", "desc": "A skilled trader dealing in weapons and supplies."})
+                        elif location["type"] == "Temple":
+                            npc_templates.append({"location": location["name"], "name": "Priest Marcus", "race": "Human", "class": "Cleric", "type": "Ally", "desc": "A devoted priest offering healing and guidance."})
+                        elif location["type"] == "Tower":
+                            npc_templates.append({"location": location["name"], "name": "Sage Aldwin", "race": "Elf", "class": "Wizard", "type": "Ally", "desc": "A wise mage studying ancient knowledge."})
+                        elif location["type"] == "Forest":
+                            npc_templates.append({"location": location["name"], "name": "Ranger Thorn", "race": "Elf", "class": "Ranger", "type": "Neutral", "desc": "A forest guardian protecting nature's secrets."})
+                        elif location["type"] == "Cave":
+                            npc_templates.append({"location": location["name"], "name": "Cave Leader", "race": "Orc", "class": "Warrior", "type": "Enemy", "desc": "A fierce tribal leader controlling the caves."})
+                        elif location["type"] == "Ruins":
+                            npc_templates.append({"location": location["name"], "name": "Ancient Guardian", "race": "Construct", "class": "Guardian", "type": "Neutral", "desc": "A magical guardian protecting ancient secrets."})
+                
+                logger.info(f"✅ Generated {len(npc_templates)} theme-appropriate NPCs")
                 
                 created_npcs = []
                 for npc_data in npc_templates:
@@ -1662,14 +1740,40 @@ async def generate_campaign_content_task(campaign_id: int):
                     except Exception as e:
                         logger.error(f"Error creating NPC {npc_data['name']}: {e}")
                 
-                # 4. Create quests and assign to NPCs
-                quest_templates = [
-                    {"title": "Welcome to Adventure", "giver": "Marta Goldweaver", "type": "Main", "desc": "Speak with the innkeeper to learn about local opportunities.", "difficulty": "Easy"},
-                    {"title": "The Missing Supplies", "giver": "Bjorn Ironforge", "type": "Side", "desc": "Recover stolen blacksmithing materials from the goblin cave.", "difficulty": "Medium"},
-                    {"title": "Ancient Knowledge", "giver": "Sage Aldwin", "type": "Main", "desc": "Investigate the mysterious ruins to uncover ancient secrets.", "difficulty": "Hard"},
-                    {"title": "Forest Troubles", "giver": "Thorn Shadowleaf", "type": "Side", "desc": "Help protect the forest from dark influences.", "difficulty": "Medium"},
-                    {"title": "Cleanse the Cave", "giver": "Brother Marcus", "type": "Side", "desc": "Clear the goblin threat from the nearby cave system.", "difficulty": "Medium"}
-                ]
+                # ✅ NOUVEAU : Quests dynamiques selon le thème et les NPCs générés
+                logger.info(f"🎨 Generating quests based on campaign theme and created NPCs")
+                
+                quest_templates = []
+                
+                if 'post-apocalyptic' in theme_lower or 'horror' in theme_lower:
+                    # Post-apocalyptic quests
+                    quest_templates = [
+                        {"title": "Survival Briefing", "giver": "Commander Steel", "type": "Main", "desc": "Learn about the current state of the wasteland and available resources.", "difficulty": "Easy"},
+                        {"title": "Medical Supplies Run", "giver": "Dr. Caine", "type": "Side", "desc": "Venture into the wasteland to recover medical supplies for the community.", "difficulty": "Medium"},
+                        {"title": "Lost Knowledge", "giver": "Sage Aldwin", "type": "Main", "desc": "Investigate the pre-war ruins to recover crucial scientific data.", "difficulty": "Hard"},
+                        {"title": "Radiation Cleanup", "giver": "Nurse Helena", "type": "Side", "desc": "Help clear a contaminated area to expand the safe zone.", "difficulty": "Medium"},
+                        {"title": "Tunnel Reconnaissance", "giver": "Commander Steel", "type": "Side", "desc": "Explore the underground tunnels to assess threats and opportunities.", "difficulty": "Medium"}
+                    ]
+                elif 'dark fantasy' in theme_lower:
+                    # Dark fantasy quests
+                    quest_templates = [
+                        {"title": "Dark Whispers", "giver": "Grimm the Barkeep", "type": "Main", "desc": "Investigate mysterious disappearances in the town.", "difficulty": "Easy"},
+                        {"title": "Cursed Artifacts", "giver": "Shadow Merchant", "type": "Side", "desc": "Retrieve dangerous magical items before they corrupt the innocent.", "difficulty": "Medium"},
+                        {"title": "Forbidden Knowledge", "giver": "Sage Aldwin", "type": "Main", "desc": "Delve into dark magic to combat an ancient evil.", "difficulty": "Hard"},
+                        {"title": "Cleanse the Darkness", "giver": "Dark Priest", "type": "Side", "desc": "Purify a corrupted sacred site from demonic influence.", "difficulty": "Medium"},
+                        {"title": "Wraith Hunt", "giver": "Bloody Mary", "type": "Side", "desc": "Track down and destroy vengeful spirits terrorizing the area.", "difficulty": "Medium"}
+                    ]
+                else:
+                    # Standard fantasy quests - using actual NPC names
+                    quest_templates = [
+                        {"title": "Welcome to Adventure", "giver": "Innkeeper Martha", "type": "Main", "desc": "Learn about local opportunities and threats.", "difficulty": "Easy"},
+                        {"title": "Trading Mission", "giver": "Merchant Bjorn", "type": "Side", "desc": "Help establish new trade routes with neighboring settlements.", "difficulty": "Medium"},
+                        {"title": "Ancient Wisdom", "giver": "Sage Aldwin", "type": "Main", "desc": "Seek out forgotten knowledge to aid the community.", "difficulty": "Hard"},
+                        {"title": "Forest Protection", "giver": "Ranger Thorn", "type": "Side", "desc": "Defend the wilderness from encroaching dangers.", "difficulty": "Medium"},
+                        {"title": "Sacred Duty", "giver": "Priest Marcus", "type": "Side", "desc": "Perform a ritual to protect the community from dark forces.", "difficulty": "Medium"}
+                    ]
+                
+                logger.info(f"✅ Generated {len(quest_templates)} theme-appropriate quests")
                 
                 for quest_data in quest_templates:
                     try:

@@ -44,7 +44,7 @@
                     }
                     else if (Model.Campaign.CharacterGenerationStatus == "InProgress")
                     {
-                        <button class="btn btn-secondary" disabled>
+                        <button id="generateContentBtnMain" class="btn btn-secondary" disabled data-campaign-id="@Model.Campaign.Id">
                             <i class="fas fa-user-plus fa-spin me-2"></i>Generating Characters...
                         </button>
                     }
@@ -453,11 +453,29 @@
             const currentCharacterStatus = '@Model.Campaign.CharacterGenerationStatus';
             const currentContentStatus = '@Model.Campaign.ContentGenerationStatus';
             
-            if (currentCharacterStatus === 'InProgress' || 
+            console.log('🏁 Status de la page au chargement:', {
+                character: currentCharacterStatus,
+                content: currentContentStatus
+            });
+            
+            // ✅ CORRECTION CRITIQUE : Mettre à jour le bouton immédiatement si génération de personnage terminée
+            if (currentCharacterStatus === 'Completed' && (currentContentStatus === 'NotStarted' || currentContentStatus === '' || currentContentStatus === null)) {
+                console.log('🎯 Character génération already completed - updating button immediately');
+                updateMainButton('ready', 'Generate Campaign Content');
+                isGenerating = false;
+                
+                // Pas besoin de monitoring dans ce cas
+            }
+            else if (currentCharacterStatus === 'InProgress' || 
                 currentContentStatus === 'InProgress' || 
                 currentContentStatus === 'ImagesInProgress') {
                 console.log('🔄 Génération en cours détectée - démarrage du monitoring automatique');
                 console.log(`Status initial: Character=${currentCharacterStatus}, Content=${currentContentStatus}`);
+                
+                // ✅ S'assurer qu'aucun monitoring n'est en cours
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                }
                 
                 // Démarrer le monitoring immédiatement
                 setTimeout(() => {
@@ -616,6 +634,12 @@
                     timestamp: Date.now()
                 }));
                 
+                // ✅ S'assurer qu'aucun monitoring n'est en cours avant de démarrer
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                    console.log('🔄 Arrêt du monitoring précédent pour redémarrage');
+                }
+                
                 startStatusChecking('@Model.Campaign.Id', contentStatusValue, characterStatusValue);
             }
             
@@ -731,23 +755,26 @@
                                 return;
                             }
                             
-                            // Check if character generation is complete - CORRECTION DES PROPRIÉTÉS
-                            if (characterStatus === 'Completed' && (contentStatus === 'NotStarted' || contentStatus === null || contentStatus === '')) {
+                            // Check if character generation is complete - CONDITION RENFORCÉE
+                            if (characterStatus === 'Completed' && (contentStatus === 'NotStarted' || contentStatus === '' || contentStatus === null)) {
                                 addLogEntry('Character generation completed successfully!', 'success');
-                                clearInterval(statusCheckInterval);
-                                isGenerating = false;
-                                localStorage.removeItem('campaign_@Model.Campaign.Id');
                                 
                                 console.log('🎯 Character generation complete - activating content generation buttons');
+                                console.log(`Debug: characterStatus=${characterStatus}, contentStatus=${contentStatus}`);
                                 
                                 // Fermer le popup et permettre la génération de contenu
                                 createOrUpdateStatusAlert('success', 'Character Generation Complete!', 'Characters have been generated successfully. You can now generate campaign content.', false);
                                 
-                                // ✅ AMÉLIORATION : Mettre à jour le bouton immédiatement
+                                // ✅ CORRECTION : Mettre à jour le bouton SANS arrêter le monitoring
                                 updateMainButton('ready', 'Generate Campaign Content');
+                                isGenerating = false; // Permettre les nouvelles actions
+                                localStorage.removeItem('campaign_@Model.Campaign.Id');
                                 
-                                // Pas de rechargement automatique - laisser l'utilisateur contrôler
-                                return;
+                                console.log('✅ Bouton mis à jour - génération de personnage terminée');
+                                
+                                // ✅ Arrêter le monitoring - il redémarrera quand l'utilisateur cliquera sur "Generate Content"
+                                clearInterval(statusCheckInterval);
+                                statusCheckInterval = null;
                             }
                             
                             // Check if generation failed
@@ -832,8 +859,11 @@
             
             function generateCampaignContent(campaignId) {
                 if (isGenerating) {
+                    console.log('⚠️ Génération déjà en cours - ignoré');
                     return; // Prevent multiple concurrent generations
                 }
+                
+                console.log('🚀 Démarrage de la génération de contenu pour campaign', campaignId);
                 
                 // ✅ AMÉLIORATION : Mettre à jour le bouton IMMÉDIATEMENT
                 updateMainButton('generating', 'Starting Generation...');
@@ -862,9 +892,15 @@
                         // ✅ AMÉLIORATION : Bouton continue à montrer le progrès
                         updateMainButton('generating', 'Generating Content...');
                         
+                        // ✅ CORRECTION : Arrêter le monitoring précédent avant de redémarrer
+                        if (statusCheckInterval) {
+                            clearInterval(statusCheckInterval);
+                            addLogEntry('Restarting monitoring for content generation...', 'info');
+                        }
+                        
                         // Start monitoring immediately
                         setTimeout(() => {
-                            startStatusChecking(campaignId, 'NotStarted', '@Model.Campaign.CharacterGenerationStatus');
+                            startStatusChecking(campaignId, 'InProgress', '@Model.Campaign.CharacterGenerationStatus');
                         }, 2000);
                         
                     } else {

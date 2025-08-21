@@ -967,6 +967,26 @@
                 
             }, 2000);
             
+            // ✅ CORRECTION : Polling fréquent pour location/NPCs après start_campaign
+            let locationCheckCount = 0;
+            const maxLocationChecks = 12; // 12 checks * 5 seconds = 1 minute max
+            
+            // Check location every 5 seconds for the first minute, then every 5 minutes
+            const locationCheckInterval = setInterval(() => {
+                locationCheckCount++;
+                
+                if (locationCheckCount <= maxLocationChecks) {
+                    // First minute : check every 5 seconds for GM location assignment
+                    console.log(`🔄 Location check ${locationCheckCount}/${maxLocationChecks}`);
+                    loadCurrentLocationData();
+                } else {
+                    // After 1 minute : check every 5 minutes like before
+                    clearInterval(locationCheckInterval);
+                    setInterval(loadCurrentLocationData, 300000); // Every 5 minutes
+                    console.log('🔄 Switched to 5-minute location polling');
+                }
+            }, 5000); // Every 5 seconds initially
+            
             // Refresh campaign elements less frequently to avoid excessive loading
             setInterval(loadCampaignElements, 300000); // Every 5 minutes
         });
