@@ -62,6 +62,11 @@ CAMPAIGN_CONTEXT_WINDOW = int(os.getenv("CAMPAIGN_CONTEXT_WINDOW", "20"))
 RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))  # requests per minute
 RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # window in seconds
 
+# JWT Configuration
+JWT_SECRET_KEY = os.getenv("JWT_SECRET", os.getenv("LLM_JWT_SECRET_KEY", "test_jwt_secret_key_for_ci_cd"))
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "24"))
+
 # Security settings
 # CORS : Autoriser uniquement les requêtes depuis l'application webapp
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:80,https://localhost,https://localhost:443,http://127.0.0.1,https://127.0.0.1").split(",")

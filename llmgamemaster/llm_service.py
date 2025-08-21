@@ -32,11 +32,32 @@ class AnthropicService:
 
 class LLMConfig:
     """Compatibility configuration class for tests"""
-    def __init__(self, provider="openai", model="gpt-4o", max_tokens=4000, temperature=0.7):
-        self.provider = provider
-        self.model = model
-        self.max_tokens = max_tokens
+    def __init__(self, provider="openai", model="gpt-4o", max_tokens=4000, temperature=0.7,
+                 openai_api_key=None, openai_model=None, openai_max_tokens=None,
+                 anthropic_api_key=None, anthropic_model=None, anthropic_max_tokens=None,
+                 primary_provider=None, fallback_enabled=True):
+        self.provider = primary_provider or provider
+        self.model = openai_model or anthropic_model or model
+        self.max_tokens = openai_max_tokens or anthropic_max_tokens or max_tokens
         self.temperature = temperature
+        self.openai_api_key = openai_api_key
+        self.openai_model = openai_model
+        self.openai_max_tokens = openai_max_tokens
+        self.anthropic_api_key = anthropic_api_key
+        self.anthropic_model = anthropic_model
+        self.anthropic_max_tokens = anthropic_max_tokens
+        self.primary_provider = primary_provider
+        self.fallback_enabled = fallback_enabled
+    
+    @classmethod
+    def from_env(cls):
+        """Create configuration from environment variables"""
+        return cls(
+            provider=os.getenv("LLM_PROVIDER", "openai"),
+            openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
+            openai_model=os.getenv("OPENAI_MODEL", "gpt-4")
+        )
 
 class LLMResponse:
     """Compatibility response class for tests"""

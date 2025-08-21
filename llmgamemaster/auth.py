@@ -10,17 +10,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 from config import (
     GAME_DB_HOST, GAME_DB_PORT, GAME_DB_NAME, GAME_DB_USER, GAME_DB_PASSWORD,
-    AUTH_DB_HOST, AUTH_DB_PORT, AUTH_DB_NAME, AUTH_DB_USER, AUTH_DB_PASSWORD
+    AUTH_DB_HOST, AUTH_DB_PORT, AUTH_DB_NAME, AUTH_DB_USER, AUTH_DB_PASSWORD,
+    JWT_SECRET_KEY, JWT_ALGORITHM, JWT_EXPIRATION_HOURS
 )
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 logger = logging.getLogger(__name__)
 
-# Configuration JWT
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-JWT_ALGORITHM = "HS256" 
-JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "24"))
+# JWT Configuration is now imported from config.py
 
 # Bearer token security scheme
 security = HTTPBearer()
