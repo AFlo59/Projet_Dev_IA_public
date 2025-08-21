@@ -33,8 +33,8 @@ namespace DnDGameMaster.WebApp.Services.Game
         
         // New methods for game state management
         Task InitializeCampaignGameStateAsync(int campaignId);
-        Task AutoAssignCharacterLocationsAsync(int campaignId);
-        Task<string?> GetMainTownForCampaignAsync(int campaignId);
+        // ✅ SUPPRIMÉ : AutoAssignCharacterLocationsAsync et GetMainTownForCampaignAsync
+        // Le LLM GameMaster gère maintenant ces responsabilités
         Task<List<object>> GetCurrentLocationDataAsync(int campaignId, int characterId);
         Task<List<object>> GetDiscoveredQuestsAsync(int campaignId, string? questGiver = null);
         Task<bool> HandleNPCInteractionAsync(int campaignId, int characterId, string npcName);

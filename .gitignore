@@ -135,4 +135,7 @@ docker-volumes/
 # ---------------------------------------------------------------------------
 # DOCUMENTATION SENSIBLE
 # ---------------------------------------------------------------------------
+# Fichiers de configuration avec secrets exposés
+ENV_FIXED.md
+
 # Rapports contenant potentiellement des infos sensibles

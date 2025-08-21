@@ -45,10 +45,7 @@
                             We've sent a confirmation email to your address. Please check your inbox and click on the confirmation link.
                         </p>
                         <p>
-                            @{
-                                var userEmail = TempData["UserEmail"]?.ToString() ?? string.Empty;
-                            }
-                            @if (!string.IsNullOrEmpty(userEmail))
+                            @if (TempData["UserEmail"] is string userEmail && !string.IsNullOrEmpty(userEmail))
                             {
                                 <a asp-action="ResendConfirmationEmail" asp-route-email="@userEmail" class="btn btn-link">Click here to resend</a>
                             }

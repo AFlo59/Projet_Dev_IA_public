@@ -703,37 +703,70 @@ async def generate_starting_elements_fallback(campaign, characters, player_name)
     """Fallback method for generating starting elements when main quest is not available"""
     logger.info(f"[PreGen] Using fallback element generation")
     
+    # ✅ CORRECTION : Prompts DYNAMIQUES selon le thème de campagne
+    settings = campaign.get('settings', 'Fantasy').lower()
+    
+    # Définir le contexte et l'ambiance selon les settings
+    if 'post-apocalyptic' in settings or 'apocalyptic' in settings:
+        theme_context = "post-apocalyptic wasteland with ruins, survivors, and dangerous mutants"
+        location_examples = "abandoned bunker, ruined city, survivor settlement, radioactive zone"
+        npc_examples = "wasteland scavenger, vault dweller, raider boss, mutant trader"
+    elif 'dark fantasy' in settings or 'horror' in settings:
+        theme_context = "dark fantasy realm filled with corruption, undead, and eldritch horrors"
+        location_examples = "cursed tower, haunted village, ancient crypt, shadowy forest"
+        npc_examples = "plague doctor, corrupted priest, ghost merchant, witch hunter"
+    elif 'modern' in settings or 'contemporary' in settings:
+        theme_context = "modern urban setting with technology, corporations, and hidden supernatural elements"
+        location_examples = "abandoned warehouse, corporate office, subway tunnel, nightclub"
+        npc_examples = "hacker, detective, corporate agent, street informant"
+    elif 'historical' in settings:
+        theme_context = "historical setting with period-appropriate locations and characters"
+        location_examples = "medieval tavern, Roman villa, Viking longhouse, colonial fort"
+        npc_examples = "town crier, merchant, knight, noble"
+    else:
+        # Fantasy par défaut
+        theme_context = "fantasy realm with magic, mythical creatures, and ancient mysteries"
+        location_examples = "mystical tavern, ancient tower, enchanted forest, magical academy"
+        npc_examples = "wise sage, mysterious wizard, tavern keeper, forest guardian"
+    
     # Create a special prompt for element generation
     element_prompt = f"""
-    You are preparing a D&D campaign called "{campaign.get('name', 'Adventure')}".
+    You are the Game Master preparing a {settings} campaign called "{campaign.get('name', 'Adventure')}".
     
-    Campaign Settings: {campaign.get('settings', 'Fantasy D&D')}
+    Campaign Theme: {theme_context}
+    Campaign Settings: {campaign.get('settings', 'Fantasy')}
     Campaign Description: {campaign.get('description', 'A thrilling adventure')}
     
-    Character in the campaign:
+    Character starting the adventure:
     {characters[0].get('name', 'Unknown')}: Level {characters[0].get('level', 1)} {characters[0].get('race', 'Human')} {characters[0].get('class', 'Fighter')}
     
-    Generate EXACTLY these starting elements for the campaign introduction:
+    CRITICAL: Generate UNIQUE and THEMATIC starting elements that fit the {settings} setting perfectly.
     
-    1. STARTING LOCATION: Name a specific location where the character begins (tavern, forest, town, etc.)
-    2. MAIN NPC: Create one important NPC the character will encounter immediately
-    3. QUEST HOOK: Define the main objective or mystery that drives the adventure
+    Examples for this theme:
+    - Locations: {location_examples}
+    - NPCs: {npc_examples}
     
-    Respond ONLY in this exact format:
-    LOCATION: [specific location name]
-    LOCATION_TYPE: [type like Tavern, Forest, Town, etc.]
-    LOCATION_DESCRIPTION: [brief description]
+    Create:
+    1. STARTING LOCATION: A specific, atmospheric location where the character begins their adventure
+    2. MAIN NPC: An important character who will provide guidance, quests, or crucial information
+    3. QUEST HOOK: The main mystery or objective that drives the adventure forward
     
-    NPC_NAME: [specific NPC name]
-    NPC_RACE: [race]
-    NPC_CLASS: [class or profession]
-    NPC_DESCRIPTION: [brief description]
+    IMPORTANT: Use the EXACT format below - the system depends on this structure:
     
-    QUEST_TITLE: [quest title]
-    QUEST_TYPE: [Main or Side]
-    QUEST_DESCRIPTION: [brief description of the objective]
+    LOCATION: [specific, unique location name that fits {settings}]
+    LOCATION_TYPE: [type that fits the theme]
+    LOCATION_DESCRIPTION: [atmospheric description matching {settings}]
     
-    Be specific and avoid generic names. Use atmospheric, evocative names that fit the {campaign.get('settings', 'fantasy')} setting.
+    NPC_NAME: [specific NPC name fitting the {settings} theme]
+    NPC_RACE: [appropriate race for the setting]
+    NPC_CLASS: [class/profession fitting the theme]
+    NPC_DESCRIPTION: [description matching the {settings} atmosphere]
+    
+    QUEST_TITLE: [compelling quest title for {settings}]
+    QUEST_TYPE: Main
+    QUEST_DESCRIPTION: [engaging objective matching the {settings} theme]
+    
+    Make everything unique, thematic, and immersive for the {settings} setting. Avoid generic fantasy names if the setting is different.
     """
     
     try:
@@ -1903,9 +1936,9 @@ async def log_performance_metrics(campaign_id: int, results: Dict[str, Any]):
 
 # Modified helper functions to work with the optimizer
 async def auto_assign_character_locations(campaign_id: int):
-    """Automatically assign starting locations to characters when campaign starts"""
+    """Check character locations - no more automatic assignment, only during start_campaign"""
     try:
-        logger.info(f"🎯 Auto-assigning character locations for campaign {campaign_id}")
+        logger.info(f"🎯 Checking character locations for campaign {campaign_id} (no automatic assignment)")
         
         # Get campaign characters
         characters = db_service.get_campaign_characters(campaign_id)
@@ -1913,30 +1946,19 @@ async def auto_assign_character_locations(campaign_id: int):
             logger.info(f"No characters found for campaign {campaign_id}")
             return
         
-        # Get available locations (prefer main town)
-        locations = db_service.get_campaign_locations(campaign_id)
-        main_town = next((loc for loc in locations if loc.get("Type") == "Town"), None)
-        
-        if not main_town:
-            logger.warning(f"No main town found for campaign {campaign_id}")
-            return
-        
-        # Assign all characters to the main town initially
+        # ✅ CORRECTION : Ne plus assigner automatiquement
+        # Les locations sont assignées uniquement lors de start_campaign
         for character in characters:
-            try:
-                db_service.update_campaign_character_location(
-                    campaign_id, 
-                    character["CharacterId"], 
-                    main_town["Name"]
-                )
-                logger.info(f"✅ Assigned character {character['CharacterId']} to {main_town['Name']}")
-            except Exception as e:
-                logger.error(f"Failed to assign location to character {character['CharacterId']}: {e}")
+            current_location = character.get("CurrentLocation")
+            if current_location:
+                logger.info(f"✅ Character {character['CharacterId']} already in location: {current_location}")
+            else:
+                logger.info(f"⏳ Character {character['CharacterId']} has no location - will be assigned during campaign start")
         
-        logger.info(f"🎯 Character location assignment completed for campaign {campaign_id}")
+        logger.info(f"🎯 Character location check completed for campaign {campaign_id}")
         
     except Exception as e:
-        logger.error(f"Error in auto-assigning character locations: {str(e)}")
+        logger.error(f"Error in checking character locations: {str(e)}")
 
 async def initialize_campaign_game_state(campaign_id: int):
     """Initialize game state when a campaign starts"""

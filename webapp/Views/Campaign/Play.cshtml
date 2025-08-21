@@ -560,7 +560,15 @@
             }
             
             async function loadCurrentLocationData() {
+                // Prevent multiple simultaneous calls
+                if (window.isLoadingLocationData) {
+                    console.log('⏳ Already loading location data, skipping...');
+                    return;
+                }
+                
                 try {
+                    window.isLoadingLocationData = true;
+                    
                     const campaignId = @Model.Campaign.Id;
                     const selectedCharacterId = document.getElementById('CharacterId').value;
                     
@@ -568,14 +576,21 @@
                         return;
                     }
                     
+                    console.log(`🔍 Loading location data for character ${selectedCharacterId}...`);
+                    
                     const response = await fetch(`@Url.Action("GetCurrentLocationData", "Campaign")?campaignId=${campaignId}&characterId=${selectedCharacterId}`);
                     const result = await response.json();
                     
                     if (result.success && result.locationData) {
+                        console.log(`✅ Location data loaded successfully`);
                         updateLocationDisplay(result.locationData);
+                    } else {
+                        console.log('❌ No location data received or failed');
                     }
                 } catch (error) {
                     console.error('Error loading current location data:', error);
+                } finally {
+                    window.isLoadingLocationData = false;
                 }
             }
             
@@ -967,27 +982,18 @@
                 
             }, 2000);
             
-            // ✅ CORRECTION : Polling fréquent pour location/NPCs après start_campaign
-            let locationCheckCount = 0;
-            const maxLocationChecks = 12; // 12 checks * 5 seconds = 1 minute max
+            // ✅ CORRECTION : Load location once initially, then check less frequently
+            console.log('🔍 Initial location data load...');
+            loadCurrentLocationData();
             
-            // Check location every 5 seconds for the first minute, then every 5 minutes
-            const locationCheckInterval = setInterval(() => {
-                locationCheckCount++;
-                
-                if (locationCheckCount <= maxLocationChecks) {
-                    // First minute : check every 5 seconds for GM location assignment
-                    console.log(`🔄 Location check ${locationCheckCount}/${maxLocationChecks}`);
-                    loadCurrentLocationData();
-                } else {
-                    // After 1 minute : check every 5 minutes like before
-                    clearInterval(locationCheckInterval);
-                    setInterval(loadCurrentLocationData, 300000); // Every 5 minutes
-                    console.log('🔄 Switched to 5-minute location polling');
-                }
-            }, 5000); // Every 5 seconds initially
+            // Check for location updates every 2 minutes instead of every 5 seconds
+            // This reduces server load while still allowing for location changes
+            setInterval(() => {
+                console.log('🔄 Periodic location check (every 2 minutes)');
+                loadCurrentLocationData();
+            }, 120000); // Every 2 minutes
             
-            // Refresh campaign elements less frequently to avoid excessive loading
+            // Refresh campaign elements every 5 minutes
             setInterval(loadCampaignElements, 300000); // Every 5 minutes
         });
         
@@ -1111,11 +1117,13 @@
                 fetch(`@Url.Action("GetCurrentLocationData", "Campaign")?campaignId=@Model.Campaign.Id&characterId=${selectedCharacterId}&_t=${timestamp}`)
                     .then(response => response.json())
                     .then(data => {
+                        console.log('🏃‍♂️ GetCurrentLocationData response:', JSON.stringify(data, null, 2));
                         if (data.success && data.locationData && data.locationData.length > 0) {
                             console.log('🏃‍♂️ Received location data from server:', data.locationData);
                             
                             // Find location from the current location data
                             const locationInfo = data.locationData.find(item => item.Type === 'Location');
+                            console.log('🔍 Searching for location in data:', locationInfo);
                             if (locationInfo) {
                                 console.log('📍 Found location info:', locationInfo);
                                 const currentLocation = locations.find(loc => loc.Name === locationInfo.Name);
@@ -1127,10 +1135,13 @@
                                     // Also update NPCs with the location data from server
                                     const npcsInLocation = data.locationData.filter(item => item.Type === 'NPC');
                                     console.log(`👥 Found ${npcsInLocation.length} NPCs in location data:`, npcsInLocation);
+                                    console.log('🧪 About to call updateNPCsFromLocationData with:', npcsInLocation);
                                     updateNPCsFromLocationData(npcsInLocation);
                                     return;
                                 }
                             }
+                        } else {
+                            console.log('❌ GetCurrentLocationData failed or no data:', data);
                         }
                         
                         // Fallback logic if server call fails or returns no data
@@ -1240,30 +1251,13 @@
             
             console.log(`👥 Updating NPCs from location data: ${npcsInLocation.length} NPCs found`);
             console.log('📝 NPCs details:', npcsInLocation);
+            console.log('🔍 NPCs data structure:', JSON.stringify(npcsInLocation, null, 2));
             
-            // If no NPCs in location data, try to fetch them from the main API
+            // If no NPCs in location data, simply show "no NPCs" message
             if (!npcsInLocation || npcsInLocation.length === 0) {
-                console.log('⚠️ No NPCs in location data, fetching from API...');
-                window.npcsUpdatedViaLocationData = false; // Allow fallback method
-                
-                // Try to get NPCs via the main elements API
-                fetch(`@Url.Action("GetElements", "Campaign", new { id = Model.Campaign.Id })`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.npcs && data.npcs.length > 0) {
-                            console.log('🔄 Received NPCs from elements API:', data.npcs);
-                            // Force update NPCs since we're in fallback mode
-                            window.npcsUpdatedViaLocationData = false;
-                            updateNPCs(data.npcs, []);
-                        } else {
-                            console.log('⚠️ No NPCs found in fallback API call');
-                            showNoNPCsMessage(npcsDiv);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('❌ Error fetching NPCs from API:', error);
-                        showNoNPCsMessage(npcsDiv);
-                    });
+                console.log('ℹ️ No NPCs in current location');
+                showNoNPCsMessage(npcsDiv);
+                window.npcsUpdatedViaLocationData = true; // Mark as handled
                 return;
             }
             
@@ -1271,6 +1265,7 @@
             window.npcsUpdatedViaLocationData = true;
             
             if (npcsInLocation && npcsInLocation.length > 0) {
+                console.log('✅ DISPLAYING NPCs - entering HTML generation');
                 const npcsHtml = npcsInLocation.map(npc => `
                     <div class="npc-card mb-2 p-2 border rounded">
                         <div class="d-flex align-items-center">
@@ -1290,8 +1285,10 @@
                     </div>
                 `).join('');
                 
+                console.log('🎨 Generated NPCs HTML:', npcsHtml);
                 npcsDiv.innerHTML = npcsHtml;
                 console.log(`✅ Successfully displayed ${npcsInLocation.length} NPCs from location data`);
+                console.log('🔍 Final NPCs container content:', npcsDiv.innerHTML);
             } else {
                 showNoNPCsMessage(npcsDiv);
             }
@@ -1299,6 +1296,8 @@
         
         // Function to show "no NPCs" message
         function showNoNPCsMessage(npcsDiv) {
+            console.log('📭 showNoNPCsMessage called - no NPCs to display');
+            console.log('🔍 NPCs div element:', npcsDiv);
             npcsDiv.innerHTML = `
                 <div class="text-center text-muted">
                     <i class="fas fa-user-friends fa-2x mb-2"></i>

@@ -322,10 +322,11 @@ namespace DnDGameMaster.WebApp.Services.Game
                     return;
                 }
                 
-                // Auto-assign starting locations to all characters
-                await AutoAssignCharacterLocationsAsync(campaignId);
+                // ✅ CORRECTION : webapp ne fait PLUS d'assignation automatique
+                // Le LLM GameMaster est SOUVERAIN sur les locations
+                _logger.LogInformation($"🎮 Game Master will handle ALL location assignments during campaign start");
                 
-                // Initialize quest discovery states
+                // Initialize quest discovery states (passive seulement)
                 await InitializeQuestStatesAsync(campaignId);
                 
                 _logger.LogInformation($"✅ Game state initialization completed for campaign {campaignId}");
@@ -337,142 +338,10 @@ namespace DnDGameMaster.WebApp.Services.Game
             }
         }
         
-        public async Task AutoAssignCharacterLocationsAsync(int campaignId)
-        {
-            try
-            {
-                _logger.LogInformation($"🎯 Checking character locations for campaign {campaignId} (respecting Game Master decisions)");
-                
-                // Get all characters in the campaign
-                var campaignCharacters = await _context.CampaignCharacters
-                    .Where(cc => cc.CampaignId == campaignId)
-                    .Include(cc => cc.Character)
-                    .ToListAsync();
-                
-                if (!campaignCharacters.Any())
-                {
-                    _logger.LogInformation($"No characters found for campaign {campaignId}");
-                    return;
-                }
-                
-                // Get the main town (starting location)
-                var mainTown = await GetMainTownForCampaignAsync(campaignId);
-                string startingLocation = mainTown ?? string.Empty;
-                
-                // If no main town found, try to get any available location
-                if (string.IsNullOrEmpty(startingLocation))
-                {
-                    _logger.LogWarning($"No main town found for campaign {campaignId}, looking for any suitable location");
-                    
-                    try
-                    {
-                        var elements = await _llmService.GetCampaignElementsAsync(campaignId);
-                        if (elements?.Success == true && elements.Locations?.Any() == true)
-                        {
-                            var fallbackLocation = elements.Locations
-                                .Where(l => l.IsAccessible)
-                                .OrderByDescending(l => l.IsDiscovered)
-                                .ThenBy(l => l.Id)
-                                .FirstOrDefault();
-                            
-                            if (fallbackLocation != null)
-                            {
-                                startingLocation = fallbackLocation.Name;
-                                _logger.LogInformation($"Using fallback starting location: {startingLocation}");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, $"Could not get campaign elements for fallback location assignment");
-                    }
-                }
-                
-                if (string.IsNullOrEmpty(startingLocation))
-                {
-                    _logger.LogWarning($"No suitable starting location found for campaign {campaignId}");
-                    return;
-                }
-                
-                // ✅ CORRECTION : RESPECTER les assignations du Game Master
-                foreach (var campaignCharacter in campaignCharacters)
-                {
-                    if (string.IsNullOrEmpty(campaignCharacter.CurrentLocation))
-                    {
-                        _logger.LogInformation($"⏳ Character {campaignCharacter.CharacterId} has no location - waiting for Game Master assignment");
-                        // Ne plus forcer de location - laisser le GM décider
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"✅ Character {campaignCharacter.CharacterId} already assigned to {campaignCharacter.CurrentLocation} by Game Master");
-                    }
-                }
-                
-                await _context.SaveChangesAsync();
-                _logger.LogInformation($"🎯 Character location assignment completed for campaign {campaignId}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error auto-assigning character locations for campaign {campaignId}");
-                throw;
-            }
-        }
+        // ✅ SUPPRIMÉ : webapp ne fait PLUS d'assignation automatique de locations
+        // Le LLM GameMaster est désormais SEUL RESPONSABLE de ces décisions
         
-        public async Task<string?> GetMainTownForCampaignAsync(int campaignId)
-        {
-            try
-            {
-                // Use LLM service to get campaign locations
-                if (_llmService != null)
-                {
-                    var locationsResponse = await _llmService.GetCampaignLocationsAsync(campaignId);
-                    if (locationsResponse?.Locations?.Any() == true)
-                    {
-                        // Priority order for starting locations
-                        var priorityTypes = new[] { "Town", "City", "Village", "Inn", "Settlement" };
-                        
-                        // Try to find a location by priority
-                        foreach (var locationType in priorityTypes)
-                        {
-                            var location = locationsResponse.Locations
-                                .FirstOrDefault(l => l.Type?.Equals(locationType, StringComparison.OrdinalIgnoreCase) == true);
-                            
-                            if (location != null)
-                            {
-                                _logger.LogInformation($"Found starting location: {location.Name} (type: {location.Type})");
-                                return location.Name;
-                            }
-                        }
-                        
-                        // If no priority location found, use the first discovered and accessible location
-                        var fallbackLocation = locationsResponse.Locations
-                            .FirstOrDefault(l => l.IsDiscovered && l.IsAccessible);
-                        
-                        if (fallbackLocation != null)
-                        {
-                            _logger.LogInformation($"Using fallback starting location: {fallbackLocation.Name} (type: {fallbackLocation.Type})");
-                            return fallbackLocation.Name;
-                        }
-                        
-                        // Last resort: use any location
-                        var anyLocation = locationsResponse.Locations.FirstOrDefault();
-                        if (anyLocation != null)
-                        {
-                            _logger.LogInformation($"Using any available location: {anyLocation.Name} (type: {anyLocation.Type})");
-                            return anyLocation.Name;
-                        }
-                    }
-                }
-                
-                _logger.LogWarning($"No suitable starting location found for campaign {campaignId}");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting main town for campaign {campaignId}");
-                return null;
-            }
-        }
+        // ✅ GetMainTownForCampaignAsync supprimé - Le LLM GameMaster gère les locations
         
         private Task InitializeQuestStatesAsync(int campaignId)
         {

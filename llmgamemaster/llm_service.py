@@ -189,25 +189,29 @@ class LLMService:
             raise
     
     def generate_campaign_intro(self, campaign: Dict, characters: List[Dict], player_name: str, starting_elements: Optional[Dict] = None, present_npcs: Optional[List[Dict]] = None) -> str:
-        """Generate a campaign introduction for a new player (toujours contextuelle)"""
+        """Generate a campaign introduction for a new player using campaign_start template"""
         try:
-            # Get prompt template with starting elements, en forçant le message_type
+            # ✅ CORRECTION : Utiliser le template campaign_start.jinja2 DIRECTEMENT
             prompt = self.render_prompt(
-                "narrative_response",
+                "campaign_start",
                 campaign=campaign,
                 characters=characters,
                 player_name=player_name,
                 starting_elements=starting_elements or {},
-                present_npcs=present_npcs or [],
-                message_type="campaign_start"
+                present_npcs=present_npcs or []
             )
+            logger.info(f"[TEMPLATE] Using campaign_start.jinja2 template for campaign {campaign.get('name')}")
+            logger.info(f"[TEMPLATE] Starting elements: {starting_elements}")
+            
             # Get system prompt
             system_prompt = self.render_prompt(
                 "system_prompt",
                 campaign=campaign
             )
             # Generate response
-            return self.generate_response(prompt, system_prompt)
+            response = self.generate_response(prompt, system_prompt)
+            logger.info(f"[TEMPLATE] Generated campaign intro response: {response[:200]}...")
+            return response
         except Exception as e:
             logger.error(f"Error generating campaign introduction: {e}")
             return "Welcome to the campaign! I'm your Game Master, and I'll be guiding you through this adventure. Let's begin our journey together!"
