@@ -45,6 +45,10 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Security(security))
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+def get_database_connection():
+    """Alias for compatibility with tests"""
+    return get_db_connection()
+
 def get_db_connection():
     """Établit une connexion à la base de données Silver"""
     try:

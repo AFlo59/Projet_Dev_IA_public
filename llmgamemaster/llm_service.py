@@ -13,6 +13,15 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
+# Compatibility class for tests
+class OpenAIService:
+    """Compatibility class for tests - wraps LLMService"""
+    def __init__(self):
+        self.llm_service = LLMService()
+    
+    def __getattr__(self, name):
+        return getattr(self.llm_service, name)
+
 class LLMService:
     def __init__(self):
         # Set up OpenAI client for older version

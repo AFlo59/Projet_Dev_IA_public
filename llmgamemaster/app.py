@@ -113,6 +113,19 @@ db_service.force_reconnect()
 llm_service = LLMService()
 element_manager = ElementManager(db_service)
 
+# Compatibility functions for tests
+def get_llm_service():
+    """Get the LLM service instance - for tests"""
+    return llm_service
+
+def get_db_service():
+    """Get the DB service instance - for tests"""
+    return db_service
+
+def get_element_manager():
+    """Get the element manager instance - for tests"""
+    return element_manager
+
 # Request models
 class MessageRequest(BaseModel):
     campaign_id: int
