@@ -583,9 +583,11 @@
                     
                     if (result.success && result.locationData) {
                         console.log(`✅ Location data loaded successfully`);
+                        console.log('📊 Full location data received:', JSON.stringify(result.locationData, null, 2));
                         updateLocationDisplay(result.locationData);
                     } else {
                         console.log('❌ No location data received or failed');
+                        console.log('📊 Response details:', result);
                     }
                 } catch (error) {
                     console.error('Error loading current location data:', error);
@@ -1060,21 +1062,21 @@
             
             // Check NPCs without portraits
             npcs.forEach(npc => {
-                if (!npc.PortraitUrl && npc.Status === 'Active') {
+                if ((!npc.PortraitUrl || npc.PortraitUrl.trim() === '') && npc.Status === 'Active') {
                     missingImages.push({ type: 'npc', id: npc.Id, name: npc.Name });
                 }
             });
             
             // Check locations without images
             locations.forEach(location => {
-                if (!location.ImageUrl && location.IsDiscovered) {
+                if ((!location.ImageUrl || location.ImageUrl.trim() === '') && location.IsDiscovered) {
                     missingImages.push({ type: 'location', id: location.Id, name: location.Name });
                 }
             });
             
             // If there are missing images, start generation (only once)
             if (missingImages.length > 0) {
-                console.log(`Found ${missingImages.length} missing images, starting generation...`);
+                console.log(`🔍 Found ${missingImages.length} missing images:`, missingImages);
                 window.imageGenerationChecked = true; // Prevent multiple calls
                 
                 fetch(`@Url.Action("GenerateMissingImages", "Campaign", new { id = Model.Campaign.Id })`, {
@@ -1087,14 +1089,24 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        console.log('Image generation started successfully');
-                        // No automatic refresh - let the 2-minute interval handle it
+                        console.log('✅ Image generation started successfully');
+                        // Force refresh after 30 seconds to check for new images
+                        setTimeout(() => {
+                            console.log('🔄 Forcing refresh after image generation...');
+                            loadCurrentLocationData();
+                            loadCampaignElements(true);
+                        }, 30000);
+                    } else {
+                        console.warn('⚠️ Image generation failed:', data.message);
+                        window.imageGenerationChecked = false; // Reset on failure
                     }
                 })
                 .catch(error => {
-                    console.error('Error starting image generation:', error);
+                    console.error('❌ Error starting image generation:', error);
                     window.imageGenerationChecked = false; // Reset on error
                 });
+            } else {
+                console.log('✅ All images are present, no generation needed');
             }
         }
         
@@ -1201,13 +1213,21 @@
         function displayLocationInfo(currentLocation, currentLocationDiv) {
             // Create location image HTML
             let locationImageHtml = '';
-            if (currentLocation.ImageUrl) {
-                locationImageHtml = `
-                    <div class="text-center mb-3">
-                        <img src="${currentLocation.ImageUrl}" class="img-fluid rounded location-image" alt="${currentLocation.Name}" />
-                    </div>
-                `;
+            if (currentLocation.ImageUrl && currentLocation.ImageUrl.trim() !== '') {
+                // Ensure the image URL is properly formatted
+                let imageUrl = currentLocation.ImageUrl;
+                if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                    imageUrl = '/' + imageUrl;
+                }
+                
+                                 // Si l'image existe, on affiche seulement l'image (pas de placeholder)
+                 locationImageHtml = `
+                     <div class="text-center mb-3">
+                         <img src="${imageUrl}" class="img-fluid rounded location-image" alt="${currentLocation.Name}" />
+                     </div>
+                 `;
             } else {
+                // Si pas d'image, on affiche le placeholder de génération
                 locationImageHtml = `
                     <div class="text-center mb-3">
                         <div class="location-image-placeholder d-flex align-items-center justify-content-center bg-light" style="height: 200px; border-radius: 8px; border: 2px dashed #dee2e6;">
@@ -1266,24 +1286,36 @@
             
             if (npcsInLocation && npcsInLocation.length > 0) {
                 console.log('✅ DISPLAYING NPCs - entering HTML generation');
-                const npcsHtml = npcsInLocation.map(npc => `
-                    <div class="npc-card mb-2 p-2 border rounded">
-                        <div class="d-flex align-items-center">
-                            ${npc.PortraitUrl ? 
-                                `<img src="${npc.PortraitUrl}" class="npc-portrait me-2" alt="${npc.Name}">` : 
-                                `<div class="npc-portrait me-2 d-flex align-items-center justify-content-center bg-light position-relative">
+                const npcsHtml = npcsInLocation.map(npc => {
+                    // Ensure the portrait URL is properly formatted
+                    let portraitUrl = npc.PortraitUrl;
+                    if (portraitUrl && !portraitUrl.startsWith('http') && !portraitUrl.startsWith('/')) {
+                        portraitUrl = '/' + portraitUrl;
+                    }
+                    
+                    return `
+                        <div class="npc-card mb-2 p-2 border rounded">
+                            <div class="d-flex align-items-center">
+                                ${portraitUrl && portraitUrl.trim() !== '' ? 
+                                    `<img src="${portraitUrl}" class="npc-portrait me-2" alt="${npc.Name}" 
+                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />` : 
+                                    `<div class="npc-portrait me-2 d-flex align-items-center justify-content-center bg-light position-relative">
+                                        <i class="fas fa-user-circle text-muted"></i>
+                                    </div>`
+                                }
+                                <div class="npc-portrait me-2 d-flex align-items-center justify-content-center bg-light position-relative" style="display: none;">
                                     <i class="fas fa-user-circle text-muted"></i>
-                                </div>`
-                            }
-                            <div>
-                                <h6 class="mb-0 small">${npc.Name}</h6>
-                                <p class="mb-0 small text-muted">${npc.Race || 'Unknown'} ${npc.Class || npc.Type || ''}</p>
-                                ${npc.Level && npc.Level > 1 ? `<p class="mb-0 small">Level ${npc.Level}</p>` : ''}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 small">${npc.Name}</h6>
+                                    <p class="mb-0 small text-muted">${npc.Race || 'Unknown'} ${npc.Class || npc.Type || ''}</p>
+                                    ${npc.Level && npc.Level > 1 ? `<p class="mb-0 small">Level ${npc.Level}</p>` : ''}
+                                </div>
                             </div>
+                            ${npc.Description ? `<p class="small mt-2 mb-0">${npc.Description.substring(0, 100)}${npc.Description.length > 100 ? '...' : ''}</p>` : ''}
                         </div>
-                        ${npc.Description ? `<p class="small mt-2 mb-0">${npc.Description.substring(0, 100)}${npc.Description.length > 100 ? '...' : ''}</p>` : ''}
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
                 
                 console.log('🎨 Generated NPCs HTML:', npcsHtml);
                 npcsDiv.innerHTML = npcsHtml;

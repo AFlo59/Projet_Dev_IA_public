@@ -16,7 +16,9 @@ namespace DnDGameMaster.WebApp.Models
         
         public bool IsActive { get; set; } = true;
         
-        // New field for character's current location
+        // Current location - Support both ID reference and name for flexibility
+        public int? CurrentLocationId { get; set; }
+        
         [StringLength(100)]
         public string? CurrentLocation { get; set; } = string.Empty;
         
@@ -28,5 +30,8 @@ namespace DnDGameMaster.WebApp.Models
         
         [ForeignKey("CharacterId")]
         public virtual Character? Character { get; set; }
+        
+        [ForeignKey("CurrentLocationId")]
+        public virtual CampaignLocation? Location { get; set; }
     }
 } 

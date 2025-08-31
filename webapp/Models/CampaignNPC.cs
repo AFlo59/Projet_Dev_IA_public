@@ -64,6 +64,9 @@ namespace DnDGameMaster.WebApp.Models
         [StringLength(2000)]
         public string? Description { get; set; } = string.Empty;
         
+        // Current location - Support both ID reference and name for flexibility
+        public int? CurrentLocationId { get; set; }
+        
         [StringLength(100)]
         public string? CurrentLocation { get; set; } = string.Empty;
         
@@ -83,6 +86,9 @@ namespace DnDGameMaster.WebApp.Models
         // Navigation properties
         [ForeignKey("CampaignId")]
         public virtual Campaign? Campaign { get; set; }
+        
+        [ForeignKey("CurrentLocationId")]
+        public virtual CampaignLocation? Location { get; set; }
         
         // Propriétés calculées pour les modificateurs
         public int StrengthModifier => (Strength - 10) / 2;

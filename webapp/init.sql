@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS "CampaignCharacters" (
     "CampaignId" integer NOT NULL,
     "CharacterId" integer NOT NULL,
     "IsActive" boolean NOT NULL DEFAULT true,
+    "CurrentLocationId" integer NULL,
     "CurrentLocation" character varying(100) NULL,
     "JoinedAt" timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT "PK_CampaignCharacters" PRIMARY KEY ("Id")
@@ -110,6 +111,19 @@ ALTER TABLE "CampaignCharacters"
 ADD CONSTRAINT "FK_CampaignCharacters_Characters_CharacterId" 
 FOREIGN KEY ("CharacterId") REFERENCES "Characters" ("Id") ON DELETE CASCADE;
 
+-- Add foreign key constraint for CurrentLocationId (after CampaignLocations table is created)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'CampaignLocations') THEN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_CampaignCharacters_CampaignLocations_CurrentLocationId') THEN
+            ALTER TABLE "CampaignCharacters" 
+            ADD CONSTRAINT "FK_CampaignCharacters_CampaignLocations_CurrentLocationId" 
+            FOREIGN KEY ("CurrentLocationId") REFERENCES "CampaignLocations" ("Id") ON DELETE SET NULL;
+        END IF;
+    END IF;
+END
+$$;
+
 ALTER TABLE "CampaignSessions" 
 ADD CONSTRAINT "FK_CampaignSessions_Campaigns_CampaignId" 
 FOREIGN KEY ("CampaignId") REFERENCES "Campaigns" ("Id") ON DELETE CASCADE;
@@ -131,6 +145,7 @@ CREATE INDEX IF NOT EXISTS "IX_Campaigns_OwnerId" ON "Campaigns" ("OwnerId");
 CREATE INDEX IF NOT EXISTS "IX_Characters_UserId" ON "Characters" ("UserId");
 CREATE UNIQUE INDEX IF NOT EXISTS "IX_CampaignCharacters_CampaignId_CharacterId" ON "CampaignCharacters" ("CampaignId", "CharacterId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignCharacters_CharacterId" ON "CampaignCharacters" ("CharacterId");
+CREATE INDEX IF NOT EXISTS "IX_CampaignCharacters_CurrentLocationId" ON "CampaignCharacters" ("CurrentLocationId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignSessions_CampaignId" ON "CampaignSessions" ("CampaignId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignMessages_CampaignId" ON "CampaignMessages" ("CampaignId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignMessages_SessionId" ON "CampaignMessages" ("SessionId");
@@ -195,6 +210,7 @@ CREATE TABLE IF NOT EXISTS "CampaignNPCs" (
     "Charisma" integer NOT NULL DEFAULT 10,
     "Alignment" character varying(50) NULL,
     "Description" character varying(2000) NULL,
+    "CurrentLocationId" integer NULL,
     "CurrentLocation" character varying(100) NULL,
     "Status" character varying(20) NOT NULL DEFAULT 'Active',
     "Notes" character varying(500) NULL,
@@ -265,6 +281,17 @@ ALTER TABLE "CampaignNPCs"
 ADD CONSTRAINT "FK_CampaignNPCs_Campaigns_CampaignId" 
 FOREIGN KEY ("CampaignId") REFERENCES "Campaigns" ("Id") ON DELETE CASCADE;
 
+-- Add foreign key constraint for CurrentLocationId
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_CampaignNPCs_CampaignLocations_CurrentLocationId') THEN
+        ALTER TABLE "CampaignNPCs" 
+        ADD CONSTRAINT "FK_CampaignNPCs_CampaignLocations_CurrentLocationId" 
+        FOREIGN KEY ("CurrentLocationId") REFERENCES "CampaignLocations" ("Id") ON DELETE SET NULL;
+    END IF;
+END
+$$;
+
 ALTER TABLE "CampaignLocations" 
 ADD CONSTRAINT "FK_CampaignLocations_Campaigns_CampaignId" 
 FOREIGN KEY ("CampaignId") REFERENCES "Campaigns" ("Id") ON DELETE CASCADE;
@@ -297,6 +324,7 @@ FOREIGN KEY ("QuestId") REFERENCES "CampaignQuests" ("Id") ON DELETE CASCADE;
 -- Create indexes for new tables
 CREATE INDEX IF NOT EXISTS "IX_CampaignNPCs_CampaignId" ON "CampaignNPCs" ("CampaignId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignNPCs_Status" ON "CampaignNPCs" ("Status");
+CREATE INDEX IF NOT EXISTS "IX_CampaignNPCs_CurrentLocationId" ON "CampaignNPCs" ("CurrentLocationId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignLocations_CampaignId" ON "CampaignLocations" ("CampaignId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignLocations_ParentLocationId" ON "CampaignLocations" ("ParentLocationId");
 CREATE INDEX IF NOT EXISTS "IX_CampaignQuests_CampaignId" ON "CampaignQuests" ("CampaignId");
@@ -657,6 +685,39 @@ CREATE INDEX IF NOT EXISTS "IX_AIModelPerformance_Date" ON "AIModelPerformance" 
 CREATE INDEX IF NOT EXISTS "IX_AIModelPerformance_ModelName" ON "AIModelPerformance" ("ModelName");
 CREATE INDEX IF NOT EXISTS "IX_AIModelPerformance_Provider" ON "AIModelPerformance" ("Provider");
 
+
+-- Migration: Add CurrentLocationId columns if they don't exist (for existing databases)
+DO $$
+BEGIN
+    -- Add CurrentLocationId to CampaignCharacters if not exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'CampaignCharacters' AND column_name = 'CurrentLocationId') THEN
+        ALTER TABLE "CampaignCharacters" ADD COLUMN "CurrentLocationId" integer NULL;
+        CREATE INDEX IF NOT EXISTS "IX_CampaignCharacters_CurrentLocationId" ON "CampaignCharacters" ("CurrentLocationId");
+        
+        -- Add foreign key if CampaignLocations exists
+        IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'CampaignLocations') THEN
+            ALTER TABLE "CampaignCharacters" 
+            ADD CONSTRAINT "FK_CampaignCharacters_CampaignLocations_CurrentLocationId" 
+            FOREIGN KEY ("CurrentLocationId") REFERENCES "CampaignLocations" ("Id") ON DELETE SET NULL;
+        END IF;
+        
+        RAISE NOTICE 'Added CurrentLocationId column to CampaignCharacters';
+    END IF;
+    
+    -- Add CurrentLocationId to CampaignNPCs if not exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'CampaignNPCs' AND column_name = 'CurrentLocationId') THEN
+        ALTER TABLE "CampaignNPCs" ADD COLUMN "CurrentLocationId" integer NULL;
+        CREATE INDEX IF NOT EXISTS "IX_CampaignNPCs_CurrentLocationId" ON "CampaignNPCs" ("CurrentLocationId");
+        
+        -- Add foreign key
+        ALTER TABLE "CampaignNPCs" 
+        ADD CONSTRAINT "FK_CampaignNPCs_CampaignLocations_CurrentLocationId" 
+        FOREIGN KEY ("CurrentLocationId") REFERENCES "CampaignLocations" ("Id") ON DELETE SET NULL;
+        
+        RAISE NOTICE 'Added CurrentLocationId column to CampaignNPCs';
+    END IF;
+END
+$$;
 
 -- Insert default alert thresholds
 INSERT INTO "AIAlertThresholds" ("MetricName", "ThresholdType", "ThresholdValue", "AlertLevel", "Description") VALUES

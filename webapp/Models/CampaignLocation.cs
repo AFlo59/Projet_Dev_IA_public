@@ -60,5 +60,9 @@ namespace DnDGameMaster.WebApp.Models
         public virtual ICollection<CampaignLocation> SubLocations { get; set; } = new List<CampaignLocation>();
         
         public virtual ICollection<CampaignQuest> Quests { get; set; } = new List<CampaignQuest>();
+        
+        // Navigation properties for characters and NPCs in this location
+        public virtual ICollection<CampaignCharacter> CharactersHere { get; set; } = new List<CampaignCharacter>();
+        public virtual ICollection<CampaignNPC> NPCsHere { get; set; } = new List<CampaignNPC>();
     }
 } 

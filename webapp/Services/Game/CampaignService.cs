@@ -267,8 +267,17 @@ namespace DnDGameMaster.WebApp.Services.Game
             
             if (campaignCharacter != null)
             {
+                // Try to find the location by name to set the ID reference
+                var campaignLocation = await _context.Set<CampaignLocation>()
+                    .FirstOrDefaultAsync(l => l.CampaignId == campaignId && l.Name == location);
+                
+                // Update both ID reference and name for flexibility
+                campaignCharacter.CurrentLocationId = campaignLocation?.Id;
                 campaignCharacter.CurrentLocation = location;
+                
                 await _context.SaveChangesAsync();
+                
+                _logger.LogInformation($"🗺️ Updated character {characterId} location to '{location}' (ID: {campaignLocation?.Id}) in campaign {campaignId}");
             }
         }
         
@@ -367,60 +376,86 @@ namespace DnDGameMaster.WebApp.Services.Game
             {
                 _logger.LogInformation($"🔍 Getting current location data for character {characterId} in campaign {campaignId}");
                 
-                var currentLocation = await GetCharacterLocationAsync(campaignId, characterId);
-                if (string.IsNullOrEmpty(currentLocation))
+                // Get character's current location with full details
+                var campaignCharacter = await _context.CampaignCharacters
+                    .Include(cc => cc.Location)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(cc => cc.CampaignId == campaignId && cc.CharacterId == characterId);
+                
+                if (campaignCharacter == null || string.IsNullOrEmpty(campaignCharacter.CurrentLocation))
                 {
                     _logger.LogWarning($"⚠️ No current location found for character {characterId} in campaign {campaignId}");
                     return new List<object>();
                 }
                 
-                _logger.LogInformation($"📍 Character {characterId} is currently in: '{currentLocation}'");
+                var currentLocationName = campaignCharacter.CurrentLocation;
+                var currentLocationId = campaignCharacter.CurrentLocationId;
                 
-                // Get location details, NPCs, and discovered quests
+                _logger.LogInformation($"📍 Character {characterId} is currently in: '{currentLocationName}' (ID: {currentLocationId})");
+                
                 var locationData = new List<object>();
                 
-                // Add location info
-                locationData.Add(new { Type = "Location", Name = currentLocation });
-                
-                // Get NPCs in this location via LLM service
-                if (_llmService != null)
+                // Add location info with full details if we have the location object
+                var locationInfo = new Dictionary<string, object>
                 {
-                    try
-                    {
-                        var npcsResponse = await _llmService.GetCampaignNPCsAsync(campaignId);
-                        if (npcsResponse?.NPCs?.Any() == true)
-                        {
-                            // Améliorer le filtrage des NPCs par localisation
-                            var npcsInLocation = npcsResponse.NPCs
-                                .Where(npc => 
-                                    npc.Status == "Active" && 
-                                    (npc.CurrentLocation?.Equals(currentLocation, StringComparison.OrdinalIgnoreCase) == true ||
-                                     string.IsNullOrEmpty(npc.CurrentLocation)) // NPCs sans localisation spécifique
-                                )
-                                .Select(npc => new { 
-                                    Type = "NPC", 
-                                    npc.Name, 
-                                    npc.Description, 
-                                    npc.PortraitUrl,
-                                    npc.Race,
-                                    npc.Class,
-                                    npc.Level,
-                                    npc.CurrentLocation
-                                })
-                                .ToList();
-                            
-                            _logger.LogInformation($"Found {npcsInLocation.Count} NPCs in location '{currentLocation}' for campaign {campaignId}");
-                            locationData.AddRange(npcsInLocation);
-                        }
-                        else
-                        {
-                            _logger.LogWarning($"No NPCs found for campaign {campaignId}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, $"Could not get NPCs for location {currentLocation}");
-                    }
+                    { "Type", "Location" },
+                    { "Name", currentLocationName }
+                };
+                
+                if (campaignCharacter.Location != null)
+                {
+                    locationInfo["Description"] = campaignCharacter.Location.Description ?? "";
+                    locationInfo["Type"] = campaignCharacter.Location.Type ?? "Location";
+                    locationInfo["ImageUrl"] = campaignCharacter.Location.ImageUrl ?? "";
+                    locationInfo["IsDiscovered"] = campaignCharacter.Location.IsDiscovered;
+                    locationInfo["IsAccessible"] = campaignCharacter.Location.IsAccessible;
+                }
+                
+                locationData.Add(locationInfo);
+                
+                // Get NPCs in this location using BOTH location name and ID for maximum compatibility
+                var npcsInLocation = await _context.Set<CampaignNPC>()
+                    .Where(npc => npc.CampaignId == campaignId && 
+                                  npc.Status == "Active" &&
+                                  (npc.CurrentLocation == currentLocationName || 
+                                   (currentLocationId.HasValue && npc.CurrentLocationId == currentLocationId.Value)))
+                    .Select(npc => new {
+                        Type = "NPC",
+                        npc.Name,
+                        npc.Description,
+                        npc.PortraitUrl,
+                        npc.Race,
+                        npc.Class,
+                        npc.Level,
+                        npc.CurrentLocation
+                    })
+                    .ToListAsync();
+                
+                _logger.LogInformation($"Found {npcsInLocation.Count} NPCs in location '{currentLocationName}' (both by name and ID) for campaign {campaignId}");
+                locationData.AddRange(npcsInLocation.Cast<object>());
+                
+                // Get other characters in the same location
+                var otherCharactersInLocation = await _context.CampaignCharacters
+                    .Include(cc => cc.Character)
+                    .Where(cc => cc.CampaignId == campaignId && 
+                                 cc.CharacterId != characterId &&
+                                 cc.IsActive &&
+                                 (cc.CurrentLocation == currentLocationName ||
+                                  (currentLocationId.HasValue && cc.CurrentLocationId == currentLocationId.Value)))
+                    .Select(cc => new {
+                        Type = "Character",
+                        Name = cc.Character!.Name,
+                        Race = cc.Character.Race,
+                        Class = cc.Character.Class,
+                        Level = cc.Character.Level,
+                        CurrentLocation = cc.CurrentLocation
+                    })
+                    .ToListAsync();
+                
+                if (otherCharactersInLocation.Any())
+                {
+                    _logger.LogInformation($"Found {otherCharactersInLocation.Count} other characters in location '{currentLocationName}'");
+                    locationData.AddRange(otherCharactersInLocation.Cast<object>());
                 }
                 
                 return locationData;

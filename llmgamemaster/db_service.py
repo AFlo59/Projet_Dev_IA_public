@@ -436,13 +436,19 @@ class DBService:
             update_fields = []
             params = []
             
+            # Always include description if provided (even if None)
             if description is not None:
                 update_fields.append('"Description" = %s')
                 params.append(description)
             
+            # Always include portrait_url if provided (even if None)
             if portrait_url is not None:
                 update_fields.append('"PortraitUrl" = %s')
                 params.append(portrait_url)
+            elif portrait_url is None and 'description' in locals():
+                # If portrait_url is explicitly None, update it to NULL in database
+                update_fields.append('"PortraitUrl" = %s')
+                params.append(None)
             
             if not update_fields:
                 logger.warning("No fields to update for character")
@@ -482,23 +488,23 @@ class DBService:
             if cursor:
                 cursor.close()
     
-    def update_character_location(self, campaign_id, character_id, location_name):
-        """Update character location in a campaign"""
+    def update_character_location(self, campaign_id, character_id, location_name, location_id=None):
+        """Update character location in a campaign (supports both name and ID for maximum compatibility)"""
         conn = self.get_game_db_connection()
         cursor = None
         try:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE "CampaignCharacters"
-                SET "CurrentLocation" = %s
+                SET "CurrentLocationId" = %s, "CurrentLocation" = %s
                 WHERE "CampaignId" = %s AND "CharacterId" = %s
                 RETURNING "Id"
-            """, (location_name, campaign_id, character_id))
+            """, (location_id, location_name, campaign_id, character_id))
             result = cursor.fetchone()
             
             if result:
                 conn.commit()  # Commit the transaction immediately
-                logger.info(f"[DB] Successfully updated character {character_id} location to {location_name}")
+                logger.info(f"[DB] Successfully updated character {character_id} location to '{location_name}' (ID: {location_id})")
                 return result
             else:
                 logger.warning(f"[DB] No character found with CampaignId {campaign_id} and CharacterId {character_id}")

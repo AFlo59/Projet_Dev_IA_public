@@ -755,20 +755,27 @@ class ElementManager:
                     best_match = self._find_best_location_match(cleaned_location, location_names)
                     
                     if best_match:
-                        # Update character location in database
-                        success = self.db_service.update_character_location(campaign_id, character_id, best_match)
+                        # Get the location ID for better synchronization
+                        location_data = self.db_service.get_location_by_name(campaign_id, best_match)
+                        location_id = location_data.get('Id') if location_data else None
+                        
+                        # Update character location in database (both ID and name for compatibility)
+                        success = self.db_service.update_character_location(
+                            campaign_id, character_id, best_match, location_id
+                        )
                         
                         if success:
                             movement_info = {
                                 'character_id': character_id,
                                 'previous_location': self.db_service.get_character_location(campaign_id, character_id),
                                 'new_location': best_match,
+                                'new_location_id': location_id,
                                 'mentioned_as': mentioned_location,
                                 'pattern_matched': pattern,
                                 'action': 'moved'
                             }
                             location_movements.append(movement_info)
-                            logger.info(f"🚶 Auto-updated character {character_id} location to '{best_match}' (mentioned as '{mentioned_location}')")
+                            logger.info(f"🚶 Auto-updated character {character_id} location to '{best_match}' (ID: {location_id}, mentioned as '{mentioned_location}')")
                             break  # Only process the first movement per response
                     
         except Exception as e:

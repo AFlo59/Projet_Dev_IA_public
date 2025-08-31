@@ -242,6 +242,7 @@ services:
       
       # JWT Configuration
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      LLM_JWT_SECRET_KEY: ${LLM_JWT_SECRET_KEY}
       JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
       
       # LLM Provider Configuration (configurable via .env)

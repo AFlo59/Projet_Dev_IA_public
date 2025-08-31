@@ -1329,6 +1329,13 @@ async def generate_character_content(request: dict, background_tasks: Background
         # Generate portrait prompt with campaign context and physical appearance
         portrait_prompt = llm_service.generate_character_portrait_prompt(formatted_campaign, formatted_character)
         
+        # CRITICAL: Ensure prompt is under 1000 characters for DALL-E compatibility
+        if len(portrait_prompt) > 950:  # Keep some margin
+            logger.warning(f"Portrait prompt too long ({len(portrait_prompt)} chars), truncating to 950 chars")
+            portrait_prompt = portrait_prompt[:947] + "..."
+        
+        logger.info(f"Final portrait prompt ({len(portrait_prompt)} chars): {portrait_prompt[:100]}...")
+        
         # Generate and store portrait image locally
         try:
             # Générer l'image temporaire
@@ -1355,13 +1362,14 @@ async def generate_character_content(request: dict, background_tasks: Background
                 
         except Exception as e:
             logger.error(f"Error generating portrait: {e}")
-            portrait_url = ""
+            # Set portrait_url to None to indicate generation failed
+            portrait_url = None
         
         # Update character in database
         update_result = db_service.update_character_content(
             character_id=character_id,
             description=description,
-            portrait_url=portrait_url
+            portrait_url=portrait_url  # Will be None if generation failed
         )
         
         if update_result:

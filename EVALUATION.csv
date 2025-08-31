@@ -1,0 +1,182 @@
+﻿Livrable;Compétences;Competence;Évaluation;Livrable;Compétences;Ready 1/0
+;;;;;;
+E1:“Gestion des données”+;"C1. Automatiser l’extraction de données
+depuis un service web, une page web (scraping*), un fichier de données, une base de données et un système big data* en programmant le script* adapté afin de pérenniser la collecte des données nécessaires au projet.";C1;"- La présentation du projet et de son contexte est complète : acteurs, objectifs fonctionnels et techniques, environnements et contraintes techniques, budget, organisation du travail et planification.
+
+";E1:“Gestion des données”+;"C1. Automatiser l’extraction de données
+depuis un service web, une page web (scraping*), un fichier de données, une base de données et un système big data* en programmant le script* adapté afin de pérenniser la collecte des données nécessaires au projet.";
+;;C1;- Les spécifications techniques précisent : les technologies et outils, les services externes, les exigences de programmation (langages), l’accessibilité (disponibilité, accès).;;;
+;;C1;- Le périmètre des spécifications techniques est complet : il couvre l’ensemble des moyens techniques à mettre en œuvre pour l’extraction et l'agrégation des données en un jeu de données brutes final.;;;
+;;C1;"
+- Le script d’extraction des données est fonctionnel : toutes les données visées sont effectivement récupérées à l’issue de l’exécution du script.";;;
+;;C1;- Le script comprend un point de lancement, l’initialisation des dépendances et des connexions externes, les règles logiques de traitement, la gestion des erreurs et des exceptions, la fin du traitement et la sauvegarde des résultats.;;;
+;;C1;- Le script d’extraction des données est versionné* et accessible depuis un dépôt Git*.;;;
+;;C1;- L’extraction des données est faite depuis un mix entre au moins les sources suivantes : un service web (API REST), un fichier de données, un scraping, une base de données et un système big data.;;;
+;C2. Développer des requêtes de type SQL d’extraction des données depuis un système de gestion de base de données et un système big data en appliquant le langage de requête propre au système afin de préparer la collecte des données nécessaires au projet.;C2;- Les requêtes de type SQL pour la collecte de données sont fonctionnelles : les données visées sont effectivement extraites suites à l'exécution des requêtes.;;C2. Développer des requêtes de type SQL d’extraction des données depuis un système de gestion de base de données et un système big data en appliquant le langage de requête propre au système afin de préparer la collecte des données nécessaires au projet.;
+;;C2;- La documentation des requêtes met en lumière choix de sélections, filtrages, conditions, jointures, etc., en fonction des objectifs de collecte.;;;
+;;C2;- La documentation explicite les optimisations appliquées aux requêtes .;;;
+;C3. Développer des règles d'agrégation de données issues de différentes sources en programmant, sous forme de script, la suppression des entrées corrompues et en programmant l’homogénéisation des formats des données afin de préparer le stockage du jeu de données final.;C3;- Le script d’agrégation des données est fonctionnel : les données sont effectivement agrégées, nettoyées et normalisées en un seul jeu de données à l’issue de l’exécution du script.;;C3. Développer des règles d'agrégation de données issues de différentes sources en programmant, sous forme de script, la suppression des entrées corrompues et en programmant l’homogénéisation des formats des données afin de préparer le stockage du jeu de données final.;
+;;C3;- Le script d’agrégation des données est versionné et accessible depuis un dépôt Git.;;;
+;;C3;- La documentation du script d’agrégation est complète : dépendances, commandes, les enchaînements logiques de l’algorithme, les choix de nettoyage et d’homogénéisation des formats données.;;;
+;C4. Créer une base de données dans le respect du RGPD en élaborant les modèles conceptuels et physiques des données à partir des données préparées et en programmant leur import afin de stocker le jeu de données du projet.;C4;- Les modélisations des données respectent la méthode et le formalisme Merise.;;C4. Créer une base de données dans le respect du RGPD en élaborant les modèles conceptuels et physiques des données à partir des données préparées et en programmant leur import afin de stocker le jeu de données du projet.;
+;;C4;- Le modèle physique des données est fonctionnel : il est intégré avec succès lors de la création de la base de données, sans erreur.;;;
+;;C4;- La base de données est choisie au regard de la modélisation des données et des contraintes du projet.;;;
+;;C4;- La reproduction des procédures d’installation décrites (base de données et API) a pour résultat un système conforme aux objets techniques attendus..;;;
+;;C4;- Le script d’import fourni est fonctionnel : il permet l’insertion des données dans le système mis en place.;;;
+;;C4;- La documentation technique du script d’import est versionné à la racine du même dépôt Git que celui utilisé pour le script d’import.;;;
+;;C4;"- Les documentations techniques des script couvrent les parties suivantes :
+- les dépendances nécessaires pour la
+réutilisation des scripts (langages, dépendances externes, etc)
+- les commandes pour l’exécution des scripts.";;;
+;;C4;- Le registre des traitements de données personnelles intègre l’ensemble des traitements de données personnelles impliqués dans la base de données.;;;
+;;C4;"
+- Les procédures de tri des données personnelles pour la mise en conformité de la base de données avec le RGPD sont rédigées.";;;
+;;C4;"
+- Les procédures de tri détaillent les traitements de conformité (automatisés ou non) à appliquer ainsi que leur fréquence d’exécution.";;;
+;C5. Développer une API mettant à disposition le jeu de données en utilisant l’architecture REST afin de permettre l’exploitation du jeu de données par les autres composants du projet.;C5;"- La documentation technique de l’API (REST) couvre tous les points de terminaisons.
+";;C5. Développer une API mettant à disposition le jeu de données en utilisant l’architecture REST afin de permettre l’exploitation du jeu de données par les autres composants du projet.;
+;;C5;- La documentation technique couvre les règles d’authentification et/ou d’autorisation de l’API.;;;
+;;C5;- La documentation technique respecte les standards du modèle choisi (par exemple OpenAPI*).;;;
+;;C5;- L’API REST est fonctionnelle pour l’accès aux données du projet : elle restreint par une autorisation (ou authentification) l'accès aux données,;;;
+;;C5;- L’API REST est fonctionnelle pour la mise à disposition : elle permet la récupération de l’ensemble des données nécessaires au projet, comme prévu selon les spécifications données.;;;
+E2:“Veille service IA”;C6. Organiser et réaliser une veille technique et réglementaire en animant le travail collectif de sélection des sources, de collecte, de traitement et de partage des informations afin de formuler des recommandations pour le projet toujours en phase avec l’état de l’art.;C6;- La thématique de veille choisie porte sur un outil et/ou une réglementation mobilisée dans la mise en situation.;E2:“Veille service IA”;C6. Organiser et réaliser une veille technique et réglementaire en animant le travail collectif de sélection des sources, de collecte, de traitement et de partage des informations afin de formuler des recommandations pour le projet toujours en phase avec l’état de l’art.;
+;;C6;- Les temps de veille sont planifiés régulièrement (à minima une récurrence d’une heure hebdomadaire).;;;
+;;C6;- Le choix des outils d’agrégation est cohérent avec les sources d’informations visées et le budget disponible (flux RSS, flux réseaux sociaux, agrégation newsletter, etc);;;
+;;C6;- Les synthèses sont communiqués aux parties prenantes dans un format qui respecte les recommandations d’accessibilité (par exemples celles de l’association Valentin Haüy2ou de Atalan - AcceDe3).;;;
+;;C6;- Les informations partagées dans la synthèse répondent à la thématique de veille choisie.;;;
+;;C6;"- Les sources et flux identifiés répondent aux critères de fiabilité :
+- L’auteur de la page est identifié
+- Des informations sur l’auteur sont
+disponibles et confirment ses compétences, sa notoriété et l’absence d’intérêts personnels
+- l’analyse du contenu est valable (date de publication récente, sources de l'information indiquées, niveau de langue
+correct),
+- la source (site) ou le document
+est structuré
+- les sources (sites) ou documents
+respectant les normes
+d'accessibilités sont privilégiés.
+- l’information peut être confirmée
+par d’autres sites de confiance";;;
+;C7. Identifier des services d’intelligence artificielle préexistants à partir de l’expression de besoin en fonctionnalités d’intelligence artificielle, en réalisant un benchmark de services existants et en analysant leurs caractéristiques pour formaliser une ou plusieurs recommandations de services adaptés au besoin.;C7;- L’expression de besoin est reformulée et présente les objectifs et les contraintes du projet d’intégration d’une solution d’intelligence artificielle.;;C7. Identifier des services d’intelligence artificielle préexistants à partir de l’expression de besoin en fonctionnalités d’intelligence artificielle, en réalisant un benchmark de services existants et en analysant leurs caractéristiques pour formaliser une ou plusieurs recommandations de services adaptés au besoin.;
+;;C7;- Le benchmark liste les services étudiés et les services non étudiés.;;;
+;;C7;- Les raisons pour écarter un service sont explicitées.;;;
+;;C7;- Le benchmark détaille le niveau d’adéquation du service étudié pour chaque ensemble fonctionnel souhaité par le commanditaire.;;;
+;;C7;- Le benchmark détaille le niveau de la démarche éco-responsable du service étudié, en fonction des informations disponibles.;;;
+;;C7;- Le benchmark détaille les principales contraintes techniques et les pré-requis pour chaque solution.;;;
+;;C7;- Les conclusions délimitent clairement les services répondant aux besoins, avec leurs avantages et leurs inconvénients, des services ne couvrant pas les besoins du commanditaire.;;;
+;C8. Paramétrer un service d’intelligence artificielle en suivant sa documentation technique et en respectant les spécifications du projet, afin de permettre l’intégration des connecteurs du service dans le système d’information.;C8;- Le service installé est accessible, avec une éventuelle authentification.;;C8. Paramétrer un service d’intelligence artificielle en suivant sa documentation technique et en respectant les spécifications du projet, afin de permettre l’intégration des connecteurs du service dans le système d’information.;
+;;C8;- Le service est configuré correctement, il répond aux besoins fonctionnels et aux contraintes techniques du projet.;;;
+;;C8;- Le monitorage disponible du service est opérationnel.;;;
+;;C8;"- La documentation couvre la gestion des accès à la solution, les procédures d’installation et de test, les éventuelles dépendances et interconnexions avec d’autres solutions, les données impliquées dans l’utilisation de la solution.
+";;;
+;;C8;- La documentation est communiquée aux parties prenantes dans un format qui respecte les recommandations d’accessibilité (par exemples celles de l’association Valentin Haüy4ou de Atalan -AcceDe5).;;;
+E3 “Mettre à disposition l’IA”;C9. Développer une API exposant un modèle d’intelligence artificielle en utilisant l’architecture REST pour permettre l’interaction entre le modèle et les autres composants du projet.;C9;- L’API restreint l’accès au modèle d’intelligence artificielle avec un moyen d’authentification.;E3 “Mettre à disposition l’IA”;C9. Développer une API exposant un modèle d’intelligence artificielle en utilisant l’architecture REST pour permettre l’interaction entre le modèle et les autres composants du projet.;
+;;C9;- L’API permet l’accès aux fonctions du modèle, comme attendu selon les spécifications.;;;
+;;C9;- Les recommandations de sécurisation d’une API du top 10 OWASP sont intégrées quand nécessaires.;;;
+;;C9;- Les sources sont versionnées et accessibles depuis un dépôt Git distant.;;;
+;;C9;- Les tests couvrent tous les points de terminaison dans le respect des spécifications.;;;
+;;C9;- Les tests s’exécutent sans bug.;;;
+;;C9;- Les résultats des tests sont correctement interprétés.;;;
+;;C9;- La documentation couvre l’architecture et tous les points de terminaisons de l’API.;;;
+;;C9;- La documentation couvre les règles d’authentification et/ou d’autorisation d’accès à l’API.;;;
+;;C9;- La documentation et l’API respectent les standards d’un modèle choisi (par exemple Open API*).;;;
+;;C9;"
+- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).";;;
+;C10. Intégrer l’API d’un modèle ou d’un service d’intelligence artificielle dans une application, en respectant les spécifications du projet et les normes d’accessibilité en vigueur, à l’aide de la documentation technique de l’API, afin de créer les fonctionnalités d’intelligence artificielle de l’application.;C10;- L’application de départ est installée et fonctionnelle en environnement de développement.;;C10. Intégrer l’API d’un modèle ou d’un service d’intelligence artificielle dans une application, en respectant les spécifications du projet et les normes d’accessibilité en vigueur, à l’aide de la documentation technique de l’API, afin de créer les fonctionnalités d’intelligence artificielle de l’application.;
+;;C10;- La communication avec l’API depuis l’application fonctionne.;;;
+;;C10;- Les éventuelles étapes d’authentification et de renouvellement de l’authentification (expiration des jetons par exemple) sont intégrées correctement en suivant la documentation de l’API.;;;
+;;C10;- Tous les points de terminaison de l’API concernés par le projet sont intégrés à l’application selon les spécifications fonctionnelles et techniques.;;;
+;;C10;- Les adaptations d’interfaces nécessaires et en accord avec les spécifications sont intégrées à l’application.;;;
+;;C10;- Les tests d’intégration couvrent tous les points de terminaison exploités.;;;
+;;C10;- Les tests s’exécutent en totalité : il n’y a pas de bug dans les programmes des tests en eux-mêmes.;;;
+;;C10;- Les tests s’exécutent en totalité : il n’y a pas de bug dans les programmes des tests en eux-mêmes.;;;
+;;C10;"
+- Les sources sont versionnées et accessibles depuis le dépôt Git de l’application.";;;
+;C11. Monitorer un modèle d’intelligence artificielle à partir des métriques courantes et spécifiques au projet, en intégrant les outils de collecte, d’alerte et de restitution des données du monitorage pour permettre l’amélioration du modèle de façon itérative.;C11;- Les métriques faisant l’objet du monitorage du modèle sont expliquées sans erreur d’interprétation.;;C11. Monitorer un modèle d’intelligence artificielle à partir des métriques courantes et spécifiques au projet, en intégrant les outils de collecte, d’alerte et de restitution des données du monitorage pour permettre l’amélioration du modèle de façon itérative.;
+;;C11;- Le ou les outils pour l’intégration du monitorage du modèle sont adaptés au contexte et aux contraintes techniques du projet.;;;
+;;C11;- Au moins un vecteur de restitution des métriques évaluées, en temps réel, est proposé (dashboard, feuille de calcul, etc).;;;
+;;C11;- Les enjeux d’accessibilité, pour toutes les parties prenantes du projet, sont pris en compte lors de la sélection de l’outil de restitution.;;;
+;;C11;- La chaîne de monitorage est d’abord testée dans un bac à sable ou environnement de test dédié.;;;
+;;C11;- La chaîne de monitorage est en état de marche. Les métriques visées sont effectivement évaluées et restituées.;;;
+;;C11;- Les sources sont versionnées et accessibles depuis un dépôt Git distant.;;;
+;;C11;- La documentation technique de la chaîne de monitorage couvre la procédure d’installation de la chaîne, de configurations, et d’utilisation du monitorage à destination des équipes techniques.;;;
+;;C11;- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).;;;
+;C12. Programmer les tests automatisés d’un modèle d’intelligence artificielle en définissant les règles de validation des jeux de données, des étapes de préparation des données, d'entraînement, d’évaluation et de validation du modèle pour permettre son intégration en continu et garantir un niveau de qualité élevé.;C12;- L’ensemble des cas à tester sont listés et définis : la partie du modèle visée par le test, le périmètre du test et la stratégie de test.;;C12. Programmer les tests automatisés d’un modèle d’intelligence artificielle en définissant les règles de validation des jeux de données, des étapes de préparation des données, d'entraînement, d’évaluation et de validation du modèle pour permettre son intégration en continu et garantir un niveau de qualité élevé.;
+;;C12;"
+- Les outils de test (framework, bibliothèque, etc.) choisis sont cohérent avec l’environnement technique du projet.";;;
+;;C12;- Les tests sont intégrés et respectent la couverture souhaitée établie.;;;
+;;C12;"
+- Les tests s'exécutent sans problème technique en environnement de test.";;;
+;;C12;- Les sources sont versionnées et accessibles depuis un dépôt Git distant (DVC, Gitlab...).;;;
+;;C12;- La documentation couvre la procédure d’installation de l’environnement de test, les dépendances installées, la procédure d’exécution des tests et de calcul de la couverture.;;;
+;;C12;- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).;;;
+;C13. Créer une chaîne de livraison continue d’un modèle d’intelligence artificielle en installant les outils et en appliquant les configuration souhaitées, dans le respect du cadre imposé par le projet et dans une approche MLOps*, pour automatiser les étapes de validation, de test, de packaging* et de déploiement du modèle.;C13;- La documentation pour l’utilisation de la chaîne couvre toutes les étapes, les tâches et tous les déclencheurs disponibles.;;C13. Créer une chaîne de livraison continue d’un modèle d’intelligence artificielle en installant les outils et en appliquant les configuration souhaitées, dans le respect du cadre imposé par le projet et dans une approche MLOps*, pour automatiser les étapes de validation, de test, de packaging* et de déploiement du modèle.;
+;;C13;- Les déclencheurs sont intégrés comme préalablement définis.;;;
+;;C13;- Le ou les fichiers de configuration de la chaîne sont correctement reconnus et exécutés par le système selon les déclencheurs configurés.;;;
+;;C13;- L’étape de test des données est intégrée à la chaîne et s’exécute sans erreur.;;;
+;;C13;- La ou les étapes de test, d'entraînement et de validation du modèle sont intégrées à la chaîne et s'exécutent sans erreur.;;;
+;;C13;- Les sources de la chaîne sont versionnées et accessibles depuis le dépôt Git distant du projet.;;;
+;;C13;- La documentation de la chaîne de livraison continue couvre la procédure d’installation, de configuration et de test de la chaîne.;;;
+;;C13;- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).;;;
+E4: “Développer une app”;C14. Analyser le besoin d’application d’un commanditaire intégrant un service d'intelligence artificielle, en rédigeant les spécifications fonctionnelles et en le modélisant, dans le respect des standards d’utilisabilité et d’accessibilité, afin d’établir avec précision les objectifs de développement correspondant au besoin et à la faisabilité technique.;C14;- La modélisation des données respecte un formalisme : Merise, entités-relations, etc.;E4: “Développer une app”;C14. Analyser le besoin d’application d’un commanditaire intégrant un service d'intelligence artificielle, en rédigeant les spécifications fonctionnelles et en le modélisant, dans le respect des standards d’utilisabilité et d’accessibilité, afin d’établir avec précision les objectifs de développement correspondant au besoin et à la faisabilité technique.;
+;;C14;"- La modélisation des parcours utilisateurs respecte un formalisme : schéma fonctionnel, wireframes, etc.
+";;;
+;;C14;- Chaque spécification fonctionnelle couvre le contexte, les scénarios d’utilisation et les critères de validation.;;;
+;;C14;- Les objectifs d’accessibilités sont directement intégrés aux critères d’acceptation des user stories.;;;
+;;C14;- Les objectifs d’accessibilité sont formulés en s’appuyant sur un des standards d'accessibilité : WCAG, RG2AA, etc.;;;
+;C15. Concevoir le cadre technique d’une application intégrant un service d’intelligence artificielle, à partir de l'analyse du besoin, en spécifiant l’architecture technique et applicative et en préconisant les outils et méthodes de développement, pour permettre le développement du projet.;C15;"- Les spécifications techniques rédigées couvrent l’architecture de l’application, ses dépendances et son environnement d’exécution (langage de programmation, framework, outils, etc).
+";;C15. Concevoir le cadre technique d’une application intégrant un service d’intelligence artificielle, à partir de l'analyse du besoin, en spécifiant l’architecture technique et applicative et en préconisant les outils et méthodes de développement, pour permettre le développement du projet.;
+;;C15;- Les éventuels services (PaaS, SaaS, etc) et prestataires ayant une démarche éco-responsable sont favorisés lors des choix techniques.;;;
+;;C15;"- Les flux de données impliqués dans l’application sont représentés par un diagramme de flux de données.
+";;;
+;;C15;"- La preuve de concept est accessible et fonctionnelle en environnement de pré-production.
+";;;
+;;C15;- La conclusion à l’issue de la preuve de concept donne un avis précis permettant une prise de décision sur la poursuite du projet.;;;
+;C16. Coordonner la réalisation technique d’une application d’intelligence artificielle en s’intégrant dans une conduite agile de projet et un contexte MLOps et en facilitant les temps de collaboration dans le but d’atteindre les objectifs de production et de qualité.;C16;- Les cycles, les étapes de chaque cycle, les rôles, les rituels et les outils de la méthode agile appliquée sont respectés dans sa mise en place et tout au long du projet.;;C16. Coordonner la réalisation technique d’une application d’intelligence artificielle en s’intégrant dans une conduite agile de projet et un contexte MLOps et en facilitant les temps de collaboration dans le but d’atteindre les objectifs de production et de qualité.;
+;;C16;- Les outils de pilotage (tableau kanban, burndown chart, backlog, etc.) sont disponibles dans les conditions prévues par la méthode appliquée.;;;
+;;C16;- Les objectifs et les modalités des rituels sont partagés à toutes les parties prenantes et rappeler si besoin.;;;
+;;C16;- Les éléments de pilotage sont rendus accessibles à toutes les parties du projet et ce tout au long du projet, en accord avec les recommandations de la méthode de gestion de projet appliquée.;;;
+;C17. Développer les composants techniques et les interfaces d’une application en utilisant les outils et langages de programmation adaptés et en respectant les spécifications fonctionnelles et techniques, les standards et normes d’accessibilité, de sécurité et de gestion des données en vigueur dans le but de répondre aux besoins fonctionnels identifiés.;C17;- L’environnement de développement installé respecte les spécifications techniques du projet.;;C17. Développer les composants techniques et les interfaces d’une application en utilisant les outils et langages de programmation adaptés et en respectant les spécifications fonctionnelles et techniques, les standards et normes d’accessibilité, de sécurité et de gestion des données en vigueur dans le but de répondre aux besoins fonctionnels identifiés.;
+;;C17;- Les interfaces sont intégrées et respectent les maquettes.;;;
+;;C17;- Les comportements des composants d’interface (validation formulaire, animations, etc.) et la navigation respectent les spécifications fonctionnelles.;;;
+;;C17;- Les composants métier sont développés et fonctionnent comme prévu par les spécifications techniques et fonctionnelles.;;;
+;;C17;- La gestion des droits d’accès à l’application ou à certains espaces de l’application est développée et respecte les spécifications fonctionnelles.;;;
+;;C17;- Les flux de données sont intégrés dans le respect des spécifications techniques et fonctionnelles.;;;
+;;C17;- Les développements sont réalisés dans le respect des bonnes pratiques d’éco-conception d’une application (Les recommandations d’éco-index ou Green IT par exemple);;;
+;;C17;- Les préconisations du top 10 d’OWASP sont implémentées dans l’application quand nécessaire.;;;
+;;C17;- Des tests d’intégration ou unitaires couvrent au moins les composants métier et la gestion des accès.;;;
+;;C17;- Les sources sont versionnées et accessibles depuis un dépôt Git distant.;;;
+;;C17;- La documentation technique couvre l’installation de l’environnement de développement, l’architecture applicative, les dépendances, l’exécution des tests.;;;
+;;C17;- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).;;;
+;C18. Automatiser les phases de tests du code source lors du versionnement des sources à l’aide d’un outil d’intégration continue* de manière à garantir la qualité technique des réalisations.;C18;- La documentation pour l’utilisation de la chaîne couvre les outils, toutes les étapes, les tâches et tous les déclencheurs de la chaîne.;;C18. Automatiser les phases de tests du code source lors du versionnement des sources à l’aide d’un outil d’intégration continue* de manière à garantir la qualité technique des réalisations.;
+;;C18;- Un outil de configuration et d'exécution d’une chaîne d’intégration continue est sélectionné de façon cohérente avec l’environnement technique du projet.;;;
+;;C18;- La chaîne intègre toutes les étapes nécessaires et préalables à l'exécution des tests de l’application (build, configurations...).;;;
+;;C18;"
+- La chaîne exécute les tests de l’application disponibles lors de son déclenchement.";;;
+;;C18;- Les configuration sont versionnées avec les sources du projet d’application, sur un dépôt Git distant.;;;
+;;C18;"
+- La documentation de la chaîne d’intégration continue couvre la procédure d’installation, de configuration et de test de la chaîne.";;;
+;;C18;- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).;;;
+;C19. Créer un processus de livraison continue d’une application en s’appuyant sur une chaîne d’intégration continue et en paramétrant les outils d’automatisation et les environnements de test afin de permettre une restitution optimale de l’application.;C19;- La documentation pour l’utilisation de la chaîne couvre toutes les étapes de la chaîne, les tâches et tous les déclencheurs disponibles.;;C19. Créer un processus de livraison continue d’une application en s’appuyant sur une chaîne d’intégration continue et en paramétrant les outils d’automatisation et les environnements de test afin de permettre une restitution optimale de l’application.;
+;;C19;"
+- Le ou les fichiers de configuration de la chaîne sont correctement reconnus et exécutés par le système.";;;
+;;C19;- La ou les étapes de packaging (compilation, minification, build de containers, etc.) de l’application sont intégrées à la chaîne et s'exécutent sans erreur.;;;
+;;C19;- L’étape de livraison (pull request par exemple) est intégrée et exécutée une fois la ou les étapes de packaging validées.;;;
+;;C19;"
+- Les sources de la chaîne sont versionnées et accessibles depuis le dépôt Git distant du projet d’application.
+";;;
+;;C19;- La documentation de la chaîne de livraison continue couvre la procédure d’installation, de configuration et de test de la chaîne.;;;
+;;C19;- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).;;;
+E5: Débogage + Monitoring;C20. Surveiller une application d’intelligence artificielle, en mobilisant des techniques de monitorage et de journalisation, dans le respect des normes de gestion des données personnelles en vigueur, afin d’alimenter la feedback loop* dans une approche MLOps, et de permettre la détection automatique d’incidents.;C20;- La documentation liste les métriques et les seuils et valeurs d’alerte pour chaque métrique à risque.;E5: Débogage + Monitoring;C20. Surveiller une application d’intelligence artificielle, en mobilisant des techniques de monitorage et de journalisation, dans le respect des normes de gestion des données personnelles en vigueur, afin d’alimenter la feedback loop* dans une approche MLOps, et de permettre la détection automatique d’incidents.;
+;;C20;- La documentation explicite les arguments en faveur des choix techniques pour l’outillage du monitorage de l’application.;;;
+;;C20;- Les outils (collecteurs, journalisation, agrégateurs, filtres, dashboard, etc.) sont installés et opérationnels à minima en environnement local.;;;
+;;C20;- Les règles de journalisation sont intégrées aux sources de l’application, en fonction des métriques à surveiller.;;;
+;;C20;- Les alertes sont configurées et en état de marche, en fonction des seuils préalablement définis.;;;
+;;C20;"- La documentation couvre la procédure d’installation et de configuration des dépendances pour l’outillage du monitorage de l’application.
+";;;
+;;C20;- La documentation est communiquée dans un format qui respecte les recommandations d’accessibilité (par exemple celles de l’association Valentin Haüy ou de Microsoft).;;;
+;C21. Résoudre les incidents techniques en apportant les modifications nécessaires au code de l’application et en documentant les solutions pour en garantir le fonctionnement opérationnel.;C21;- La ou les causes du problème sont identifiées correctement.;;C21. Résoudre les incidents techniques en apportant les modifications nécessaires au code de l’application et en documentant les solutions pour en garantir le fonctionnement opérationnel.;
+;;C21;- Le problème est reproduit en environnement de développement.;;;
+;;C21;- La procédure de débogage du code est documentée depuis l’outil de de suivi.;;;
+;;C21;- La solution documentée explicite chaque étape de la résolution et de son implémentation.;;;
+;;C21;- La solution est versionnée dans le dépôt Git du projet d’application (par exemple avec une merge request).;;;
